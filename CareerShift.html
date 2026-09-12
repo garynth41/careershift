@@ -210,6 +210,36 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sync{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
 .sync i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:1px}
 .sync.off i{background:var(--idle)}
+/* onboarding kit */
+.pwbox{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:9px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap}
+.pwbox span{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--warn)}
+.pwbox code{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:.04em;user-select:all;color:var(--ink)}
+.draft{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.draft-row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line-2);font-size:13px}
+.draft-row span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.draft-row input{border:0;background:transparent;font-weight:600;padding:2px 0}
+.draft-row input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.draft textarea{width:100%;border:0;padding:12px;font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--surface-2);resize:vertical;display:block}
+.draft textarea:focus{outline:none}
+.kit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn.wa{background:#25d366;border-color:#25d366;color:#fff;text-decoration:none}
+.btn.wa:hover{background:#1ebe5b;color:#fff}
+/* modal */
+.modal-back{position:fixed;inset:0;background:rgba(10,16,28,.55);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{width:100%;max-width:640px;max-height:92vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:15px}
+.mclose{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-3)}
+.mbody{padding:16px 18px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0;cursor:pointer}
+.chk input{accent-color:var(--accent);width:15px;height:15px}
+.pwrow{display:flex;gap:6px}.pwrow input{flex:1;font-family:var(--mono)}
+.kit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+.kv{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.kv span{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.kv code{font-family:var(--mono);font-size:13px;word-break:break-all;user-select:all}
+@media (max-width:600px){.grid2,.kit-grid{grid-template-columns:1fr}}
 [hidden]{display:none!important}
 </style></head><body>
 <!-- ===================== AUTH SCREEN ===================== -->
@@ -241,6 +271,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <div id="view"></div>
   </main>
 </div>
+<div class="modal-back" id="modalBack" hidden><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -273,7 +304,7 @@ const toast = m => { const t=document.getElementById('toast'); t.textContent=m; 
 const ago = ts => { const s=(Date.now()-new Date(ts))/1000; if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago'; if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; };
 
 /* ---- configurable settings (merged with workspaces.settings) ---- */
-const CFG_DEFAULTS = { readyGreen:85, readyYellow:70, runwayGreen:12, runwayYellow:6, dueSoonDays:3, followWindowDays:7, budgetCritPct:10,
+const CFG_DEFAULTS = { appUrl:'', readyGreen:85, readyYellow:70, runwayGreen:12, runwayYellow:6, dueSoonDays:3, followWindowDays:7, budgetCritPct:10,
   weeklyAppTarget:5, weeklyNetworkTarget:3, financeVisibility:'owner', lists:{} };
 let CFG = {...CFG_DEFAULTS};
 const BASE_L = {};
@@ -354,9 +385,13 @@ function seed(){
 /* ===================== State & session ===================== */
 let S;                       // data for the active workspace
 let MODE = 'db';             // 'db' (Supabase) | 'demo' (localStorage)
-let sb = null, USER = null, WS = null, ROLE = 'viewer';
+let sb = null, USER = null, WS = null, ROLE = 'viewer', ME = {};
 let current = 'exec';
-const isOwner = () => ROLE==='owner', canEdit = () => ROLE==='owner'||ROLE==='editor';
+const isOwner = () => ROLE==='owner', canEdit = () => ROLE==='owner'||(ROLE==='editor' && !ME.read_only);
+const canExport = () => isOwner() || !!ME.can_export;
+const MODULE_GROUPS = {tasks:'Tasks & Gantt', pipeline:'Applications, Analytics & Interviews', relationships:'Recruiters & Networking', compliance:'Unemployment compliance'};
+const moduleOk = g => !g || isOwner() || !ME.modules || !ME.modules.length || ME.modules.includes(g);
+const appUrl = () => (CFG.appUrl||'').trim() || location.href.split('#')[0];
 const DEMO_KEY='careershift.demo.v1';
 
 /* ---- data adapter: every mutation goes through here ---- */
@@ -401,7 +436,23 @@ const db = {
   async loadAdmin(){
     if(MODE==='demo'){ S.adminUsers=S.members.map(m=>({...m,last_sign_in_at:null,must_change_password:false,email_confirmed:true})); S.sessions=[]; S.mailConfig={email_configured:false}; return; }
     const [u,s] = await Promise.all([ db.admin({action:'users'}), sb.rpc('admin_sessions',{ws:WS.id}) ]);
-    S.adminUsers=u.users; S.mailConfig={email_configured:u.email_configured}; S.sessions=s.data||[];
+    S.adminUsers=u.users; S.mailConfig={email_configured:u.email_configured}; S.sessions=s.data||[]; S.sessionsAt=new Date().toISOString();
+  },
+  async importJson(obj){
+    const map={tasks:'tasks',applications:'apps',apps:'apps',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance',compliance_weeks:'compliance',expenses:'expenses'};
+    const strip=r=>{ const o={...r}; delete o.id; delete o.workspace_id; delete o.created_by; delete o.updated_by; delete o.created_at; delete o.updated_at; return o; };
+    const counts={};
+    for(const [k,coll] of Object.entries(map)){
+      const rows=Array.isArray(obj[k])?obj[k]:null; if(!rows||!rows.length) continue;
+      if(coll==='expenses' && !financeEditable()) continue;
+      const clean=rows.map(strip);
+      if(MODE==='demo'){ clean.forEach(r=>{ r.id=uid(); S[coll].push(r); }); }
+      else { const {error}=await sb.from(TABLE[coll]).insert(clean.map(r=>({...r,workspace_id:WS.id}))); if(error) throw error; }
+      counts[coll]=(counts[coll]||0)+clean.length;
+    }
+    if(obj.cash && financeEditable()){ const c={}; for(const k of ['savings','checking','severance','investments','unemployment','other']) if(obj.cash[k]!=null) c[k]=+obj.cash[k]; await db.updateCash(c); }
+    if(MODE==='demo') demoSave();
+    logEvent('import_json',counts); return counts;
   },
   async clearModules(){
     if(MODE==='demo'){ for(const c of Object.keys(TABLE)) S[c]=[]; demoSave(); return; }
@@ -595,24 +646,24 @@ const VIEWS = [
   {id:'exec',n:1,title:'Executive Dashboard',sub:'Home — KPI scorecards, gauges, trends and weekly workload'},
   {id:'daily',n:2,title:'Daily Action Dashboard',sub:'Auto-generated priority list for today'},
   {zone:'Execution'},
-  {id:'tasks',n:3,title:'Master Task Tracker',sub:'Every task with priority, status, owner and progress'},
-  {id:'gantt',n:4,title:'Dynamic Gantt Chart',sub:'Timeline rebuilds from the task tracker automatically'},
+  {id:'tasks',n:3,title:'Master Task Tracker',sub:'Every task with priority, status, owner and progress',group:'tasks'},
+  {id:'gantt',n:4,title:'Dynamic Gantt Chart',sub:'Timeline rebuilds from the task tracker automatically',group:'tasks'},
   {zone:'Pipeline'},
-  {id:'apps',n:5,title:'Job Applications CRM',sub:'Company, role, source, stage, next action'},
-  {id:'analytics',n:6,title:'Application Analytics',sub:'Pivots by source, stage, company and month'},
-  {id:'interviews',n:7,title:'Interview Tracker',sub:'Scheduled and completed interviews'},
-  {id:'ready',n:8,title:'Interview Readiness Scorecard',sub:'Five weighted categories, 20% each'},
+  {id:'apps',n:5,title:'Job Applications CRM',sub:'Company, role, source, stage, next action',group:'pipeline'},
+  {id:'analytics',n:6,title:'Application Analytics',sub:'Pivots by source, stage, company and month',group:'pipeline'},
+  {id:'interviews',n:7,title:'Interview Tracker',sub:'Scheduled and completed interviews',group:'pipeline'},
+  {id:'ready',n:8,title:'Interview Readiness Scorecard',sub:'Five weighted categories, 20% each',group:'pipeline'},
   {zone:'Relationships'},
-  {id:'recruiters',n:9,title:'Recruiter CRM',sub:'Agency and internal recruiters with follow-up cadence'},
-  {id:'network',n:10,title:'Networking CRM',sub:'People, referral potential and follow-ups'},
+  {id:'recruiters',n:9,title:'Recruiter CRM',sub:'Agency and internal recruiters with follow-up cadence',group:'relationships'},
+  {id:'network',n:10,title:'Networking CRM',sub:'People, referral potential and follow-ups',group:'relationships'},
   {zone:'Compliance & money'},
-  {id:'compliance',n:11,title:'Unemployment Compliance Tracker',sub:'Weekly work-search activity vs. requirement'},
+  {id:'compliance',n:11,title:'Unemployment Compliance Tracker',sub:'Weekly work-search activity vs. requirement',group:'compliance'},
   {id:'budget',n:12,title:'Expense & Budget Dashboard',sub:'Fixed and variable spending vs. plan',finance:true},
   {id:'runway',n:13,title:'Cash Runway Calculator',sub:'Burn rate, months remaining, exhaustion date',finance:true},
   {zone:'Planning'},
   {id:'weekly',n:14,title:'Weekly Planning Dashboard',sub:'Everything that needs attention in the next 7 days'},
   {zone:'Administration'},
-  {id:'admin',n:15,title:'Settings & Administration',sub:'Single source of control — settings, users & access, activity logging, health indicators'},
+  {id:'admin',n:15,title:'Settings & Administration',sub:'Single source of control — users, sessions, analytics, security audit, export/import, activity log, settings'},
 ];
 function navBadges(){
   const k=kpis(), t=T();
@@ -622,7 +673,7 @@ function navBadges(){
 }
 function renderNav(){
   const b=navBadges();
-  document.getElementById('nav').innerHTML = VIEWS.filter(v=>v.zone||!v.finance||financeVisible()).map(v=> v.zone? `<div class="zone">${v.zone}</div>` :
+  document.getElementById('nav').innerHTML = VIEWS.filter(v=>v.zone||((!v.finance||financeVisible()) && moduleOk(v.group))).map(v=> v.zone? `<div class="zone">${v.zone}</div>` :
     `<button data-view="${v.id}" class="${v.id===current?'active':''}"><span class="n">${pad(v.n)}</span>${esc(v.title)}${b[v.id]?`<span class="badge">${b[v.id]}</span>`:''}</button>`).join('');
 }
 document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('[data-view]'); if(!b) return; current=b.dataset.view; window.scrollTo(0,0); logEvent('view',{module:current}); render(); });
@@ -906,22 +957,142 @@ R.weekly = el => {
 };
 
 /* ---- 15. Settings & Administration ---- */
-let ADMIN_TAB='settings';
-const ROLE_DESC={owner:'Full control: settings, members, finance, logs.',editor:'Adds and updates shared modules. Finance only if enabled in Settings.',viewer:'Read-only across shared modules.'};
+let ADMIN_TAB='users';
+const ROLE_DESC={owner:'Full control: settings, members, finance, logs.',editor:'Adds and updates the modules in scope. Finance only if enabled in Settings.',viewer:'Read-only across the modules in scope.'};
+function genPassword(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; const v=crypto.getRandomValues(new Uint8Array(12)); let s=''; v.forEach(x=>s+=a[x%a.length]); return s.slice(0,4)+'-'+s.slice(4,8)+'-'+s.slice(8,12); }
 function csvDownload(name, rows){
+  if(!canExport()) return toast('You are not authorized to export');
   if(!rows.length) return toast('Nothing to export');
   const cols=Object.keys(rows[0]); const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>q(typeof r[c]==='object'?JSON.stringify(r[c]):r[c])).join(','))).join('\n');
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=name; document.body.appendChild(a); a.click(); a.remove();
   logEvent('export',{file:name,rows:rows.length});
 }
+function textDownload(name, text){ const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(text); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function permBadges(u){ const out=[]; if(u.role!=='owner'){ if(u.read_only) out.push('<span class="pill warn">read-only</span>'); if(u.can_export) out.push('<span class="pill info">export</span>'); if(u.modules&&u.modules.length) out.push(`<span class="pill idle" title="${esc(u.modules.map(m=>MODULE_GROUPS[m]).join(', '))}">scope: ${u.modules.length}/4</span>`); else out.push('<span class="pill good">full scope</span>'); } return out.join(' ')||'—'; }
+function ownerName(){ return (ME.display_name||ME.first_name)||(USER?USER.email.split('@')[0]:'the workspace owner'); }
+function onboardingText(u, pw){
+  const first=u.first_name||(u.display_name||u.email||'').split(/[ @]/)[0]||'there';
+  const scope=u.modules&&u.modules.length? u.modules.map(m=>MODULE_GROUPS[m]) : Object.values(MODULE_GROUPS);
+  const on_=ownerName(); const lines=[`Hi ${first},`,``,`${on_.charAt(0).toUpperCase()+on_.slice(1)} has set you up on CareerShift — the workspace we're using to run the job search.`,``,`YOUR ACCESS`,`• App link: ${appUrl()}`,`• Sign in with: ${u.email}`];
+  if(pw) lines.push(`• Temporary password: ${pw}`); else lines.push(`• Password: the one you chose (use "Forgot password?" on the sign-in screen if needed)`);
+  lines.push(`• Role: ${u.role}${u.read_only?' (read-only)':''} — ${ROLE_DESC[u.role]||''}`);
+  lines.push(``,`FIRST SIGN-IN (about 2 minutes)`,`1. Open the app link above — it works on desktop or phone.`,`2. Enter your email and the ${pw?'temporary ':''}password, then click Sign in.`);
+  if(pw) lines.push(`3. You'll be asked to choose your own password (8+ characters). Do that once.`,`4. You land on the Executive Dashboard; the left rail lists the modules you can open.`);
+  else lines.push(`3. You land on the Executive Dashboard; the left rail lists the modules you can open.`);
+  lines.push(``,`WHERE YOU CAN HELP`); scope.forEach(s=>lines.push(`• ${s}`));
+  lines.push(``,`GOOD TO KNOW`,`• Changes save automatically and everyone sees them live.`,`• Module 2 (Daily Action) and 14 (Weekly Planning) show what needs attention — a good place to start each day.`,`• If a sign-in problem comes up, reply to this message and I'll reset your access.`,``,`Thanks — ${ownerName()}`);
+  return lines.join('\n');
+}
+function openModal(html){ const m=document.getElementById('modal'); m.innerHTML=html; document.getElementById('modalBack').hidden=false; setTimeout(()=>{ const f=m.querySelector('input,select,textarea,button'); f&&f.focus(); },30); }
+function closeModal(){ document.getElementById('modalBack').hidden=true; document.getElementById('modal').innerHTML=''; }
+document.getElementById('modalBack').addEventListener('click',e=>{ if(e.target.id==='modalBack') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !document.getElementById('modalBack').hidden) closeModal(); });
+
+function userModal(u){ // u = existing user (edit) or null (create)
+  const edit=!!u; const mail=S.mailConfig&&S.mailConfig.email_configured;
+  const mods=(u&&u.modules)||[];
+  const html=`<div class="mhead"><b>${edit?'Edit user':'Add user'}</b><button class="mclose" id="mClose" aria-label="Close">×</button></div>
+  <form id="fUser" class="mbody">
+    <div class="grid2"><div class="field"><label for="uFirst">First name *</label><input id="uFirst" required value="${esc(u?u.first_name||'':'')}"></div><div class="field"><label for="uLast">Last name *</label><input id="uLast" required value="${esc(u?u.last_name||'':'')}"></div></div>
+    <div class="grid2"><div class="field"><label for="uEmail">Email *</label><input id="uEmail" type="email" required value="${esc(u?u.email:'')}" ${edit?'disabled':''}></div>
+    <div class="field"><label for="uPhone">Mobile (for WhatsApp share, with country code)</label><input id="uPhone" type="tel" placeholder="+1 614 555 0100" value="${esc(u?u.phone||'':'')}"></div></div>
+    ${edit?'':`<div class="grid2"><div class="field"><label for="uPw">Temporary password *</label><div class="pwrow"><input id="uPw" type="password" minlength="6" required value="${genPassword()}"><button type="button" class="btn" id="uEye" title="Show/hide">👁</button></div><button type="button" class="btn" id="uGen" style="margin-top:6px">🔒 Generate secure password</button><div class="note">Min 6 chars. User should change it on first login.</div></div>
+    <div class="field"><label for="uRole">Role</label><select id="uRole"><option value="editor">Editor — adds & updates</option><option value="viewer">Viewer — read only</option></select></div></div>`}
+    ${edit?`<div class="grid2"><div class="field"><label for="uRole">Role</label><select id="uRole" ${u.role==='owner'?'disabled':''}>${u.role==='owner'?'<option>owner</option>':`<option value="editor" ${u.role==='editor'?'selected':''}>Editor — adds & updates</option><option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer — read only</option>`}</select></div>
+    <div class="field"><label for="uStatus">Account status</label><select id="uStatus" ${u.role==='owner'?'disabled':''}><option value="active" ${!(u.banned_until&&new Date(u.banned_until)>new Date())?'selected':''}>Active</option><option value="disabled" ${(u.banned_until&&new Date(u.banned_until)>new Date())?'selected':''}>Disabled</option></select></div></div>`
+    :`<div class="grid2"><div class="field"><label for="uStatus">Account status</label><select id="uStatus"><option value="active">Active</option><option value="disabled">Disabled (create now, enable later)</option></select></div>
+    <label class="chk" style="align-self:end"><input type="checkbox" id="uRequire" checked> Require password change at next login</label></div>`}
+    <div class="grid2">
+      <div><label class="chk"><input type="checkbox" id="uExport" ${u&&u.can_export?'checked':''}> 🔓 Authorize data export / download</label><div class="note">By default only the owner can export. Check this to grant this user export rights within their scope.</div></div>
+      <div><label class="chk"><input type="checkbox" id="uReadOnly" ${u&&u.read_only?'checked':''}> 🔒 Read-only access</label><div class="note">Can view everything within their scope but cannot add, edit, delete or import. Overrides the role's normal permissions.</div></div>
+    </div>
+    <div class="field"><label>🎯 Access level</label><div class="note" style="margin:0 0 6px">Choose how narrowly this user's access is scoped. Each level restricts what they can see and edit — enforced in the database.</div>
+      <label class="chk"><input type="radio" name="uScope" value="all" ${mods.length?'':'checked'}> Full workspace (all modules)</label>
+      <label class="chk"><input type="radio" name="uScope" value="limited" ${mods.length?'checked':''}> Limited to selected modules:</label>
+      <div class="grid2" style="margin-left:22px">${Object.entries(MODULE_GROUPS).map(([k,l])=>`<label class="chk"><input type="checkbox" class="uMod" value="${k}" ${mods.includes(k)?'checked':''}> ${l}</label>`).join('')}</div>
+      <div class="note" style="margin-left:22px">Executive, Daily and Weekly dashboards always show — limited to the data in scope. Budget & Cash Runway follow the Finance visibility setting.</div></div>
+    <div class="field"><label for="uNotes">Notes (internal)</label><input id="uNotes" value="${esc(u?u.notes||'':'')}" placeholder="e.g. former colleague, helps with networking"></div>
+    ${edit?'':`<label class="chk"><input type="checkbox" id="uSend" ${mail?'checked':'disabled'}> Email the temporary password to the user now ${mail?'':'(email delivery not configured — you will get an onboarding kit to send yourself)'}</label>`}
+    <div id="uMsg"></div>
+    <div class="mfoot"><button type="button" class="btn" id="mCancel">Cancel</button><button type="submit" class="btn primary" id="mSave">${edit?'Save changes':'Create user'}</button></div>
+  </form>`;
+  openModal(html);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  $('#mClose').onclick=$('#mCancel').onclick=closeModal;
+  if(!edit){ $('#uGen').onclick=()=>{ $('#uPw').value=genPassword(); $('#uPw').type='text'; }; $('#uEye').onclick=()=>{ $('#uPw').type=$('#uPw').type==='password'?'text':'password'; }; }
+  m.querySelectorAll('.uMod').forEach(c=>c.addEventListener('change',()=>{ m.querySelector('input[name=uScope][value=limited]').checked=true; }));
+  $('#fUser').addEventListener('submit',e=>{ e.preventDefault(); guarded(async()=>{
+    const limited=m.querySelector('input[name=uScope]:checked').value==='limited';
+    const modules=limited? [...m.querySelectorAll('.uMod:checked')].map(c=>c.value) : [];
+    if(limited && !modules.length) throw new Error('Pick at least one module for a limited scope');
+    if(!edit && USER && $('#uEmail').value.trim().toLowerCase()===USER.email.toLowerCase()) throw new Error('That is your own email — you are already the owner. Add a different person.');
+    const base={first_name:$('#uFirst').value.trim(),last_name:$('#uLast').value.trim(),phone:$('#uPhone').value.trim(),can_export:String($('#uExport').checked),read_only:String($('#uReadOnly').checked),modules,notes:$('#uNotes').value.trim(),app_url:appUrl()};
+    $('#mSave').disabled=true; $('#mSave').textContent=edit?'Saving…':'Creating…';
+    if(edit){
+      await db.admin({action:'update_user',user_id:u.user_id,...base,...(u.role==='owner'?{}:{role:$('#uRole').value,status:$('#uStatus').value})});
+      closeModal(); S.adminUsers=null; await refresh(); await db.loadAdmin(); render(); toast('User updated');
+    } else {
+      const r=await db.admin({action:'invite',email:$('#uEmail').value.trim().toLowerCase(),role:$('#uRole').value,password:$('#uPw').value,status:$('#uStatus').value,require_change:String($('#uRequire').checked),send_email:String($('#uSend').checked),...base});
+      S.adminUsers=null; await db.loadAll(); await db.loadAdmin(); render();
+      const created={...base,phone:$('#uPhone').value.trim(),email:$('#uEmail').value.trim().toLowerCase(),role:$('#uRole').value,read_only:$('#uReadOnly').checked,can_export:$('#uExport').checked,display_name:r.display_name};
+      kitModal(created, r.created_account? $('#uPw').value : null, r);
+    }
+  }).then(()=>{ const s=$('#mSave'); if(s){ s.disabled=false; s.textContent=edit?'Save changes':'Create user'; } }); });
+}
+function kitModal(u, pw, r){ // onboarding kit: email draft with the temporary password, send / WhatsApp / copy
+  const text=onboardingText(u,pw);
+  const first=u.first_name||(u.display_name||u.email||'').split(/[ @]/)[0]||'there';
+  const status = r? (r.emailed? `<div class="msg ok">Account ${r.created_account?'created':'linked'} and the temporary password was emailed to <b>${esc(u.email)}</b>. You can still send it again below.</div>` : r.created_account? `<div class="msg info">Account created. Review the draft below, then <b>Send email</b> or <b>Share via WhatsApp</b>. The temporary password is shown only in this kit.</div>` : `<div class="msg ok">${esc(u.email)} already had an account and was added to the workspace. Their existing password still applies.</div>`)
+    : (pw? '' : `<div class="msg info">No temporary password is available for an existing member (passwords are never stored in readable form). Use <b>Reset pw</b> to issue a new one — the kit then reopens with it filled in.</div>`);
+  const mail=S.mailConfig&&S.mailConfig.email_configured;
+  const subj=`Your CareerShift access — ${S.settings.name||'workspace'}`;
+  const waText = (t)=> `*CareerShift access*\n${t}`;
+  openModal(`<div class="mhead"><b>Onboarding kit — ${esc(u.display_name||u.email)}</b><button class="mclose" id="kClose">×</button></div><div class="mbody">${status}
+    ${pw?`<div class="pwbox"><div><span>Temporary password</span><code id="kPw">${esc(pw)}</code></div><button class="btn" id="kCopyPw">Copy password</button></div>`:''}
+    <div class="draft">
+      <div class="draft-row"><span>From</span><div>${esc(ownerName())} ${USER?`&lt;${esc(USER.email)}&gt;`:''}</div></div>
+      <div class="draft-row"><span>To</span><div><b>${esc(u.email)}</b>${u.phone?` · WhatsApp ${esc(u.phone)}`:''}</div></div>
+      <div class="draft-row"><span>Subject</span><input id="kSubj" value="${esc(subj)}"></div>
+      <textarea id="kText" rows="17">${esc(text)}</textarea>
+    </div>
+    <div class="kit-actions">
+      <button class="btn primary" id="kSend" title="${mail?'Send this draft from CareerShift':'Opens the draft in your email app (automatic sending needs an email provider — see Security Audit)'}">${mail&&MODE!=='demo'?'✉ Send email':'✉ Send via my email app'}</button>
+      <a class="btn wa" id="kWa" href="#" target="_blank" rel="noopener">💬 Share via WhatsApp${u.phone?'':' (pick contact)'}</a>
+      <button class="btn" id="kCopy">Copy message</button>
+      <button class="btn" id="kDl">Download .txt</button>
+      <button class="btn" id="kDone">Done</button>
+    </div>
+    <div class="note">${u.phone?'WhatsApp opens a chat with '+esc(u.phone)+' and the message pre-filled — press send there.':'No mobile number on file, so WhatsApp will ask you to pick the contact; add a number via Edit to skip that step.'} Checklist: ① send ② confirm they can sign in ③ confirm they changed the temporary password (status turns to "Active" in Users) ④ walk them through their modules.</div></div>`);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  const sync=()=>{ const t=$('#kText').value; $('#kWa').href=`https://wa.me/${(u.phone||'').replace(/[^\d]/g,'')}?text=${encodeURIComponent(waText(t))}`; }; sync(); $('#kText').addEventListener('input',sync);
+  $('#kClose').onclick=$('#kDone').onclick=closeModal;
+  $('#kCopy').onclick=()=>navigator.clipboard?.writeText($('#kText').value).then(()=>toast('Message copied')).catch(()=>toast('Select the text and copy manually'));
+  const cp=$('#kCopyPw'); if(cp) cp.onclick=()=>navigator.clipboard?.writeText(pw).then(()=>toast('Password copied'));
+  $('#kDl').onclick=()=>textDownload(`careershift-onboarding-${(u.email||'user').split('@')[0]}.txt`,`Subject: ${$('#kSubj').value}\n\n${$('#kText').value}`);
+  $('#kWa').addEventListener('click',()=>logEvent('onboarding_whatsapp',{target:u.email,with_password:!!pw}));
+  $('#kSend').onclick=()=>{
+    if(mail&&MODE!=='demo'){ const btn=$('#kSend'); btn.disabled=true; btn.textContent='Sending…'; guarded(async()=>{ const r2=await db.admin({action:'send_message',to:u.email,subject:$('#kSubj').value,text:$('#kText').value}); if(!r2.emailed) throw new Error(r2.mail_error||'Not sent'); btn.textContent='✓ Sent'; },'Email sent to '+u.email).then(()=>{ if(btn.textContent!=='✓ Sent'){ btn.disabled=false; btn.textContent='✉ Send email'; } }); }
+    else { logEvent('onboarding_mailto',{target:u.email}); location.href=`mailto:${encodeURIComponent(u.email)}?subject=${encodeURIComponent($('#kSubj').value)}&body=${encodeURIComponent($('#kText').value)}`; }
+  };
+  logEvent('onboarding_kit',{target:u.email,with_password:!!pw});
+}
+function resetModal(u){
+  openModal(`<div class="mhead"><b>Reset password — ${esc(u.display_name||u.email)}</b><button class="mclose" id="rClose">×</button></div><form id="fReset" class="mbody">
+    <div class="field"><label for="rPw">New temporary password</label><div class="pwrow"><input id="rPw" type="text" minlength="6" required value="${genPassword()}"><button type="button" class="btn" id="rGen">Generate</button></div><div class="note">The user will be required to choose their own password at next login.</div></div>
+    <label class="chk"><input type="checkbox" id="rSend" ${S.mailConfig&&S.mailConfig.email_configured?'checked':'disabled'}> Email it to the user now</label>
+    <div class="mfoot"><button type="button" class="btn" id="rCancel">Cancel</button><button class="btn primary" type="submit">Reset & show onboarding kit</button></div></form>`);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  $('#rClose').onclick=$('#rCancel').onclick=closeModal; $('#rGen').onclick=()=>{ $('#rPw').value=genPassword(); };
+  $('#fReset').addEventListener('submit',e=>{ e.preventDefault(); guarded(async()=>{ const r=await db.admin({action:'reset_password',user_id:u.user_id,password:$('#rPw').value,send_email:String($('#rSend').checked),app_url:appUrl()}); S.adminUsers=null; await db.loadAdmin(); render(); kitModal(u,r.temp_password,{created_account:true,emailed:r.emailed,mail_error:r.mail_error}); }); });
+}
+
 function healthChecks(){
   const t=T(), wk=addDays(t,-7);
   const events=S.events||[], users=S.adminUsers||[], inv=S.invites||[];
   const daysSince=d=>d?diffDays(t,String(d).slice(0,10)):null;
   const apps7=S.apps.filter(a=>a.applied&&a.applied>wk).length;
   const net7=S.contacts.filter(c=>c.last&&c.last>wk).length + S.recruiters.filter(r=>r.last&&r.last>wk).length;
-  const advanced=S.apps.filter(a=>!['Applied'].includes(a.stage)&&a.stage!=='Rejected').length;
   const responded=S.apps.filter(a=>a.stage!=='Applied').length;
   const followups=[...S.recruiters.map(r=>r.next),...S.contacts.map(c=>c.next)].filter(Boolean);
   const overdueF=followups.filter(d=>d<t).length;
@@ -929,18 +1100,22 @@ function healthChecks(){
   const activeDays=new Set(events.filter(e=>e.created_at>new Date(Date.now()-7*DAY).toISOString()).map(e=>String(e.created_at).slice(0,10))).size;
   const pendingFirst=users.filter(u=>u.must_change_password).length, never=users.filter(u=>!u.last_sign_in_at).length, disabled=users.filter(u=>u.banned_until&&new Date(u.banned_until)>new Date()).length;
   const staleInv=inv.filter(i=>daysSince(i.created_at)>7).length;
+  const exporters=users.filter(u=>u.role!=='owner'&&u.can_export).length, wideScope=users.filter(u=>u.role==='editor'&&!u.read_only&&(!u.modules||!u.modules.length)).length;
   const chk=(group,name,cls,detail,fix)=>({group,name,cls,detail,fix});
   const out=[
-    chk('Security','Row-level security','good','Every table enforces workspace membership and role in Postgres, not just in the UI.'),
+    chk('Security','Row-level security','good','Every table enforces workspace membership, role, read-only flag and module scope in Postgres, not just in the UI.'),
     chk('Security','Finance visibility',CFG.financeVisibility==='owner'?'good':'warn',CFG.financeVisibility==='owner'?'Budget and Cash Runway are owner-only.':'Budget and Cash Runway are visible to all members.','Settings → Finance visibility'),
-    chk('Security','Invitation email delivery',(S.mailConfig&&S.mailConfig.email_configured)?'good':'warn',(S.mailConfig&&S.mailConfig.email_configured)?'Temporary passwords are emailed automatically.':'No email provider configured — temporary passwords are shown to you to share manually.','Add RESEND_API_KEY to the admin-users function secrets'),
+    chk('Security','Invitation email delivery',(S.mailConfig&&S.mailConfig.email_configured)?'good':'warn',(S.mailConfig&&S.mailConfig.email_configured)?'Temporary passwords are emailed automatically.':'No email provider configured — the onboarding kit shows the temporary password for you to send.','Add RESEND_API_KEY to the admin-users function secrets'),
+    chk('Security','App link configured',CFG.appUrl?'good':'warn',CFG.appUrl?`Onboarding messages point to ${CFG.appUrl}`:'No app link set — onboarding messages fall back to the current page address.','Settings → App link'),
     chk('Security','Accounts pending first sign-in',pendingFirst?'warn':'good',`${pendingFirst} member${pendingFirst===1?'':'s'} still on a temporary password.`,pendingFirst?'Follow up or reset their temporary password':null),
     chk('Security','Members who never signed in',never?'warn':'good',`${never} member${never===1?'':'s'} have never signed in.`),
     chk('Security','Disabled accounts',disabled?'info':'good',`${disabled} disabled account${disabled===1?'':'s'}.`),
-    chk('Security','Stale pending invites',staleInv?'warn':'good',`${staleInv} legacy invite${staleInv===1?'':'s'} older than 7 days.`,staleInv?'Revoke or re-send from Users & Access':null),
+    chk('Security','Export rights granted',exporters?'info':'good',`${exporters} non-owner member(s) may export data.`,exporters?'Review in Users → Edit':null),
+    chk('Security','Editors with full write scope',wideScope>2?'warn':'info',`${wideScope} editor(s) can write to every module.`,'Use Access level to narrow scope where possible'),
+    chk('Security','Stale pending invites',staleInv?'warn':'good',`${staleInv} legacy invite${staleInv===1?'':'s'} older than 7 days.`),
     chk('Security','Single owner',users.filter(u=>u.role==='owner').length<=1?'info':'warn',`${users.filter(u=>u.role==='owner').length||1} owner account(s). Keep exactly one; use editors for helpers.`),
     chk('Security','Multi-factor authentication','info','Not enforced. Enable MFA in Supabase Auth → Providers if you want a second factor for owners.'),
-    chk('Backup','Last data export',lastExport?(daysSince(lastExport.created_at)>7?'warn':'good'):'crit',lastExport?`Last export ${ago(lastExport.created_at)}.`:'No export recorded yet.','Settings → Export workspace JSON (weekly recommended)'),
+    chk('Backup','Last data export',lastExport?(daysSince(lastExport.created_at)>7?'warn':'good'):'crit',lastExport?`Last export ${ago(lastExport.created_at)}.`:'No export recorded yet.','Export / Import → Export workspace JSON (weekly recommended)'),
     chk('Data hygiene','Tasks without a due date',S.tasks.some(x=>!x.due)?'warn':'good',`${S.tasks.filter(x=>!x.due).length} task(s) have no due date.`),
     chk('Data hygiene','Overdue tasks > 7 days',S.tasks.some(x=>x.status!=='Complete'&&x.due&&diffDays(t,x.due)>7)?'crit':'good',`${S.tasks.filter(x=>x.status!=='Complete'&&x.due&&diffDays(t,x.due)>7).length} task(s) overdue more than a week.`),
     chk('Data hygiene','Applications without a next action',S.apps.some(a=>a.status!=='Closed'&&!a.next)?'warn':'good',`${S.apps.filter(a=>a.status!=='Closed'&&!a.next).length} open application(s) missing a next action.`),
@@ -957,11 +1132,87 @@ function healthChecks(){
   ];
   return out;
 }
+const kpiCard=(l,v,c,s)=>`<div class="kpi ${c||'info'}"><div class="l">${l}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
+const isOnline=s=>s.active && (Date.now()-new Date(s.last_active))<15*60*1000;
+
 R.admin = el => {
-  const tabs=[['settings','Settings'],['users','Users & Access'],['activity','Activity Log'],['health','Health & Best Practices']].filter(t=>isOwner()||t[0]!=='health');
+  const tabs=[['users','👥 Users'],['sessions','🟢 Live Sessions'],['analytics','📈 User Analytics'],['audit','🛡 Security Audit'],['exportimport','📦 Export / Import'],['activity','📋 Activity Log'],['settings','⚙ Settings']]
+    .filter(t=>isOwner()||['activity','settings','exportimport'].includes(t[0]));
+  if(!tabs.some(t=>t[0]===ADMIN_TAB)) ADMIN_TAB=tabs[0][0];
   const tabBar=`<div class="slicers" style="margin-bottom:10px"><div class="slicer"><div class="opts">${tabs.map(t=>`<button data-atab="${t[0]}" class="${ADMIN_TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div></div></div>`;
-  let body='';
-  const ro = !isOwner();
+  let body=''; const ro=!isOwner(); const me=USER?USER.id:'demo';
+
+  if(ADMIN_TAB==='users'){
+    const users=S.adminUsers;
+    const status=u=>u.banned_until&&new Date(u.banned_until)>new Date()?'<span class="pill crit">Disabled</span>':u.must_change_password?'<span class="pill warn">Temp password</span>':!u.last_sign_in_at?'<span class="pill idle">Never signed in</span>':'<span class="pill good">Active</span>';
+    const rows=(users||S.members||[]).map(u=>{ const id=u.user_id; const mine=id===me; const dis=u.banned_until&&new Date(u.banned_until)>new Date();
+      return `<tr><td><span class="avatar" style="width:26px;height:26px;font-size:11px;display:inline-grid;margin-right:8px;vertical-align:middle">${esc(((u.first_name||u.email||'?')[0]).toUpperCase())}</span><b>${esc(u.display_name||[u.first_name,u.last_name].filter(Boolean).join(' ')||u.email.split('@')[0])}</b>${mine?' <span class="pill info">you</span>':''}<div class="m" style="font-size:12px;color:var(--ink-3)">${esc(u.email||'')}</div></td>
+        <td><span class="role ${u.role}">${u.role}</span></td><td>${permBadges(u)}</td><td>${status(u)}</td><td class="num">${u.last_sign_in_at?ago(u.last_sign_in_at):'—'}</td><td class="num">${u.joined||u.created_at?fmtD(String(u.joined||u.created_at).slice(0,10)):'—'}</td>
+        <td style="white-space:nowrap">${isOwner()&&MODE!=='demo'?`<button class="btn" data-edit="${id}" style="padding:2px 8px;font-size:12px">Edit</button> <button class="btn" data-kit="${id}" style="padding:2px 8px;font-size:12px" title="Regenerate the onboarding message">Kit</button> ${!mine?`<button class="btn" data-reset="${id}" style="padding:2px 8px;font-size:12px">Reset pw</button> <button class="btn" data-toggle="${id}" data-enabled="${dis?'true':'false'}" style="padding:2px 8px;font-size:12px">${dis?'Enable':'Disable'}</button> <button class="del" data-remove="${id}" title="Remove from workspace">✕</button>`:''}`:''}</td></tr>`; }).join('');
+    const mail=S.mailConfig;
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Members',(S.members||[]).length)}${kpiCard('Active',(users||[]).filter(u=>u.last_sign_in_at&&!(u.banned_until&&new Date(u.banned_until)>new Date())).length,'good')}${kpiCard('Pending first sign-in',(users||[]).filter(u=>u.must_change_password||!u.last_sign_in_at).length,(users||[]).some(u=>u.must_change_password||!u.last_sign_in_at)?'warn':'good')}${kpiCard('Email delivery',mail?(mail.email_configured?'On':'Off'):'…',mail&&mail.email_configured?'good':'warn',mail&&mail.email_configured?'temp passwords are emailed':'send the onboarding kit yourself')}</div>
+      <div class="card"><div class="tblhead"><h3 style="margin:0">Users <span class="hint">${(S.members||[]).length}${users?'':' · loading sign-in details…'}</span></h3>${isOwner()&&MODE!=='demo'?'<button class="btn primary" id="btnAddUser">+ Add user</button>':''}</div>
+        <div class="tblwrap"><table class="tbl"><thead><tr><th>Person</th><th>Role</th><th>Permissions</th><th>Status</th><th>Last sign-in</th><th>Joined</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">No members yet.</td></tr>'}</tbody></table></div>
+        <div class="legend" style="margin-top:10px;flex-direction:column;gap:4px">${L.roles.map(r=>`<span><span class="role ${r}">${r}</span> &nbsp;${ROLE_DESC[r]}</span>`).join('')}<span><span class="pill warn">read-only</span> &nbsp;overrides the role: view only. <span class="pill info">export</span> &nbsp;may download data. <span class="pill idle">scope</span> &nbsp;limited to selected module groups.</span></div>
+        <div class="note">How access works: <b>Add user</b> creates the account instantly with a temporary password, then shows an <b>onboarding kit</b> — a ready-to-send message with the app link, credentials and step-by-step sign-in instructions (copy it, open it in your email app, or send it through CareerShift when email delivery is configured). The user must choose their own password on first sign-in. <b>Kit</b> regenerates the message for any member at any time.</div></div>`;
+  }
+  if(ADMIN_TAB==='sessions'){
+    const ss=S.sessions||[]; const online=ss.filter(isOnline); const byUser={}; ss.forEach(s=>{ byUser[s.user_email]=byUser[s.user_email]||[]; byUser[s.user_email].push(s); });
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Online now',online.length,online.length?'good':'info','active in the last 15 min')}${kpiCard('Active sessions',ss.filter(s=>s.active).length)}${kpiCard('People with a session',Object.keys(byUser).length)}${kpiCard('Last refreshed',S.sessionsAt?ago(S.sessionsAt):'—','info')}</div>
+      <div class="card"><div class="tblhead"><h3 style="margin:0">Live sessions <span class="hint">server-side, from Supabase Auth</span></h3><button class="btn" id="refreshSessions">Refresh</button></div>
+      <div class="tblwrap"><table class="tbl"><thead><tr><th></th><th>Person</th><th>Last active</th><th>Session started</th><th>Device / browser</th><th>IP</th></tr></thead><tbody>${ss.map(s=>`<tr><td><span class="dot ${isOnline(s)?'good':s.active?'warn':''}"></span></td><td>${esc(s.user_email)}</td><td class="num">${ago(s.last_active)}</td><td class="num">${ago(s.session_started)}</td><td style="max-width:260px;overflow:hidden;text-overflow:ellipsis" title="${esc(s.user_agent||'')}">${esc((s.user_agent||'').replace(/Mozilla\/5.0 \(([^)]*)\).*?(Chrome|Safari|Firefox|Edg)\/([\d.]+).*/,'$2 $3 · $1').slice(0,60))}</td><td class="id">${esc(s.ip||'')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No sessions.</td></tr>'}</tbody></table></div>
+      <div class="legend"><span><i style="background:var(--good)"></i>Online (active &lt; 15 min)</span><span><i style="background:var(--warn)"></i>Signed in, idle</span><span><i style="background:var(--idle)"></i>Expired</span></div></div>`;
+  }
+  if(ADMIN_TAB==='analytics'){
+    const ev=S.events||[], au=S.activity||[]; const since=new Date(Date.now()-14*DAY).toISOString();
+    const ev7=ev.filter(e=>e.created_at>new Date(Date.now()-7*DAY).toISOString()), au7=au.filter(a=>a.created_at>new Date(Date.now()-7*DAY).toISOString());
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Sign-ins (7d)',ev7.filter(e=>e.event==='sign_in').length)}${kpiCard('Active users (7d)',new Set([...ev7,...au7].map(x=>x.user_email)).size,'good')}${kpiCard('Data changes (7d)',au7.filter(a=>['insert','update','delete'].includes(a.action)).length)}${kpiCard('Module views (7d)',ev7.filter(e=>e.event==='view').length)}${kpiCard('Exports (7d)',ev7.filter(e=>/export/.test(e.event)).length)}</div>
+      <div class="grid g12"><div class="card span8"><h3>Activity per day <span class="hint">last 14 days</span></h3><div id="ua1" class="chart"></div></div><div class="card span4"><h3>Views by module</h3><div id="ua2" class="chart"></div></div>
+      <div class="card span6"><h3>Data changes by person</h3><div id="ua3" class="chart"></div></div><div class="card span6"><h3>Per-user summary</h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>Person</th><th style="text-align:right">Sign-ins</th><th style="text-align:right">Views</th><th style="text-align:right">Changes</th><th style="text-align:right">Exports</th><th>Last seen</th></tr></thead><tbody id="uaTable"></tbody></table></div></div></div>`;
+    setTimeout(()=>{
+      const days=[...Array(14)].map((_,i)=>addDays(T(),i-13));
+      const cnt=(arr,pred)=>days.map(d=>arr.filter(x=>String(x.created_at).slice(0,10)===d&&pred(x)).length);
+      Plotly.newPlot(el.querySelector('#ua1'),[{type:'bar',name:'Data changes',x:days.map(fmtD),y:cnt(au,a=>['insert','update','delete'].includes(a.action)),marker:{color:cssVar('--accent')}},{type:'bar',name:'Views',x:days.map(fmtD),y:cnt(ev,e=>e.event==='view'),marker:{color:cssVar('--good')}},{type:'bar',name:'Sign-ins',x:days.map(fmtD),y:cnt(ev,e=>e.event==='sign_in'),marker:{color:cssVar('--warn')}}],{...plotBase(),barmode:'stack',showlegend:true,legend:{orientation:'h',y:1.15},height:240},PCFG);
+      const vm={}; ev.filter(e=>e.event==='view').forEach(e=>{ const k=(e.detail&&e.detail.module)||'?'; vm[k]=(vm[k]||0)+1; }); const vk=Object.keys(vm).sort((a,b)=>vm[b]-vm[a]).slice(0,10);
+      Plotly.newPlot(el.querySelector('#ua2'),[{type:'bar',orientation:'h',y:vk.reverse(),x:vk.map(k=>vm[k]),marker:{color:cssVar('--accent')}}],{...plotBase(),height:240,margin:{l:90,r:10,t:6,b:30}},PCFG);
+      const pm={}; au.forEach(a=>{ if(['insert','update','delete'].includes(a.action)){ const k=(a.user_email||'?').split('@')[0]; pm[k]=(pm[k]||0)+1; } }); const pk=Object.keys(pm);
+      Plotly.newPlot(el.querySelector('#ua3'),[{type:'bar',x:pk,y:pk.map(k=>pm[k]),marker:{color:cssVar('--accent')}}],{...plotBase(),height:220},PCFG);
+      const by={}; ev.forEach(e=>{ const w=e.user_email||''; by[w]=by[w]||{s:0,v:0,c:0,x:0,last:null}; if(e.event==='sign_in') by[w].s++; if(e.event==='view') by[w].v++; if(/export/.test(e.event)) by[w].x++; if(!by[w].last||e.created_at>by[w].last) by[w].last=e.created_at; });
+      au.forEach(a=>{ const w=a.user_email||''; by[w]=by[w]||{s:0,v:0,c:0,x:0,last:null}; if(['insert','update','delete'].includes(a.action)) by[w].c++; if(!by[w].last||a.created_at>by[w].last) by[w].last=a.created_at; });
+      el.querySelector('#uaTable').innerHTML=Object.entries(by).map(([w,v])=>`<tr><td>${esc(w)}</td><td class="num">${v.s}</td><td class="num">${v.v}</td><td class="num">${v.c}</td><td class="num">${v.x}</td><td class="num">${v.last?ago(v.last):'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No activity yet.</td></tr>';
+    },0);
+  }
+  if(ADMIN_TAB==='audit'){
+    const checks=healthChecks(); const groups=[...new Set(checks.map(c=>c.group))];
+    const counts={good:0,warn:0,crit:0,info:0}; checks.forEach(c=>counts[c.cls]++);
+    const users=S.adminUsers||[];
+    const caps=[['View shared modules',u=>true],['Edit shared modules',u=>u.role==='owner'||(u.role==='editor'&&!u.read_only)],['View finance',u=>u.role==='owner'||CFG.financeVisibility==='members'],['Edit finance',u=>u.role==='owner'||(u.role==='editor'&&!u.read_only&&CFG.financeVisibility==='members')],['Export data',u=>u.role==='owner'||u.can_export],['Manage users & settings',u=>u.role==='owner']];
+    const matrix=users.length?`<div class="card span12"><h3>Permission matrix <span class="hint">effective rights per member</span></h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>Person</th><th>Scope</th>${caps.map(c=>`<th style="text-align:center">${c[0]}</th>`).join('')}</tr></thead><tbody>${users.map(u=>`<tr><td>${esc(u.display_name||u.email)} <span class="role ${u.role}">${u.role}</span></td><td>${u.modules&&u.modules.length?esc(u.modules.map(m=>MODULE_GROUPS[m].split(',')[0]).join(', ')):'all'}</td>${caps.map(c=>`<td style="text-align:center">${c[1](u)?'<span class="dot good"></span>':'<span class="dot"></span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`:'';
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Passing',counts.good,'good')}${kpiCard('Watch',counts.warn,'warn')}${kpiCard('Critical',counts.crit,'crit')}${kpiCard('Informational',counts.info,'info')}</div>
+      <div class="grid g12">${matrix}${groups.map(g=>`<div class="card span6"><h3>${g}</h3><ul class="alist">${checks.filter(c=>c.group===g).map(c=>`<li><span class="dot ${c.cls==='info'?'':c.cls}"></span><span><span class="t">${esc(c.name)}</span><div class="m">${esc(c.detail)}${c.fix?` <span style="color:var(--accent)">→ ${esc(c.fix)}</span>`:''}</div></span><span class="pill ${c.cls==='info'?'info':c.cls}">${c.cls==='good'?'OK':c.cls==='warn'?'Watch':c.cls==='crit'?'Critical':'Info'}</span></li>`).join('')}</ul></div>`).join('')}</div>`;
+  }
+  if(ADMIN_TAB==='exportimport'){
+    const lastExport=(S.events||[]).find(e=>/export/.test(e.event));
+    body=`<div class="grid g12">
+      <div class="card span6"><h3>Export</h3>${canExport()?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="exportJson">Workspace JSON (full backup)</button><button class="btn" id="exportCsvAll">All modules (CSV)</button><button class="btn" id="exportLog2">Activity log (CSV)</button></div><div class="note">Last export: ${lastExport?ago(lastExport.created_at):'never'}. Exports include only the modules in your scope${financeVisible()?' plus finance':''}. Every export is recorded in the activity log.</div>`:'<div class="msg info">You are not authorized to export data. Ask the workspace owner to grant export rights (Users → Edit → Authorize data export).</div>'}</div>
+      <div class="card span6"><h3>Import</h3>${canEdit()?`<div class="field"><label for="impFile">Restore from a CareerShift JSON export (rows are added, never overwritten)</label><input id="impFile" type="file" accept="application/json,.json"></div><div id="impResult"></div><div class="note">Accepted keys: tasks, applications, interviews, recruiters, contacts, compliance, expenses, cash. IDs are regenerated. Import is limited to your scope and permissions.</div>`:'<div class="msg info">Read-only access — import is not available.</div>'}</div>
+      ${isOwner()&&MODE!=='demo'?`<div class="card span12" style="border-color:var(--crit)"><h3 style="color:var(--crit)">Danger zone</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn danger" id="clearData">Clear all module data</button><button class="btn danger" id="deleteWs">Delete workspace</button></div><div class="note">Both actions are permanent. Export first.</div></div>`:''}
+    </div>`;
+  }
+  if(ADMIN_TAB==='activity'){
+    const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email||'system',kind:['insert','update','delete'].includes(a.action)?'data':'access',what:`${a.action.replace(/_/g,' ')} ${a.table_name.replace(/_/g,' ')}${a.record_id&&a.record_id.length<12?' '+a.record_id:''}`,detail:a.summary||''}));
+    const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email||'',kind:e.event.startsWith('admin_')?'access':'session',what:e.event.replace(/_/g,' '),detail:e.detail&&Object.keys(e.detail).length?Object.entries(e.detail).filter(([k])=>k!=='mail_error').map(([k,v])=>`${k}: ${Array.isArray(v)?v.join('+'):v}`).join(' · '):''}));
+    const all=[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when));
+    SL.activity=SL.activity||{};
+    const defs=[{k:'kind',label:'Type',opts:['data','access','session']},{k:'who',label:'Person'}];
+    const {rows}=applySlicers('activity',defs,all);
+    const q=(SL.activity._q||'').toLowerCase();
+    const shown=rows.filter(r=>!q||(r.what+' '+r.detail+' '+r.who).toLowerCase().includes(q)).slice(0,400);
+    body=`<div class="grid g12"><div class="card span12"><h3>Detailed log <span class="hint">${all.length} entries · data changes, access changes, sessions & usage${isOwner()?'':' · your activity only'}</span></h3>
+        ${slicerHTML('activity',defs,all)}
+        <div class="inline-form"><div class="field"><label for="actQ">Search</label><input id="actQ" type="search" value="${esc(SL.activity._q||'')}" placeholder="task, company, person, action…"></div>${canExport()?'<button class="btn" id="exportLog" style="height:38px">Export log (CSV)</button>':''}</div>
+        <div class="tblwrap"><table class="tbl"><thead><tr><th>When</th><th>Person</th><th>Type</th><th>Event</th><th>Detail</th></tr></thead><tbody>${shown.map(r=>`<tr><td class="num" title="${esc(r.when)}">${ago(r.when)}</td><td>${esc(r.who.split('@')[0])}</td><td><span class="pill ${r.kind==='data'?'info':r.kind==='access'?'warn':'idle'}">${r.kind}</span></td><td>${esc(r.what)}</td><td style="white-space:normal;max-width:520px">${esc(r.detail)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nothing matches.</td></tr>'}</tbody></table></div></div></div>`;
+  }
   if(ADMIN_TAB==='settings'){
     const f=(id,label,val,type='number',extra='')=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" ${ro?'disabled':''} ${extra}></div>`;
     body=`<div class="grid g12">
@@ -969,6 +1220,7 @@ R.admin = el => {
         ${f('setName','Workspace name',S.settings.name||'','text')}
         ${f('setSep','Separation date',S.settings.separationDate||'','date')}
         ${f('setReq','Weekly work-search requirement (unemployment compliance)',S.settings.weeklyRequirement,'number','min="1"')}
+        ${f('setUrl','App link (used in onboarding messages and emails)',CFG.appUrl||'','url',`placeholder="${esc(location.href.split('#')[0])}"`)}
         <div class="field"><label for="setFin">Finance visibility (Budget & Cash Runway)</label><select id="setFin" ${ro?'disabled':''}><option value="owner" ${CFG.financeVisibility==='owner'?'selected':''}>Owner only</option><option value="members" ${CFG.financeVisibility==='members'?'selected':''}>All members (editors can edit)</option></select></div>
         <div class="note">Finance visibility is enforced in the database (row-level security), so hidden really means hidden.</div></div>
       <div class="card span6"><h3>Thresholds & indicators</h3>
@@ -982,116 +1234,51 @@ R.admin = el => {
       <div class="card span12"><h3>Dropdown lists <span class="hint">one value per line; blank = default</span></h3>
         <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${Object.keys(LIST_LABELS).map(k=>`<div class="field"><label for="list-${k}">${LIST_LABELS[k]}</label><textarea id="list-${k}" data-list="${k}" rows="5" ${ro?'disabled':''} style="border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--surface-2);font-size:12.5px;resize:vertical">${esc((CFG.lists[k]&&CFG.lists[k].length?CFG.lists[k]:BASE_L[k]).join('\n'))}</textarea></div>`).join('')}</div>
         ${ro?'':'<button class="btn primary" id="saveLists">Save lists</button> <button class="btn" id="resetLists">Restore defaults</button>'}</div>
-      <div class="card span6"><h3>Data tools</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="exportJson">Export workspace JSON</button>
-        <button class="btn" id="exportCsvAll">Export all modules (CSV)</button>
-        ${!ro && S.tasks.length+S.apps.length===0?'<button class="btn" id="loadSample2">Load sample data</button>':''}</div>
-        <div class="note">Exports are recorded in the activity log and count toward the backup indicator.</div></div>
-      ${ro?'':`<div class="card span6" style="border-color:var(--crit)"><h3 style="color:var(--crit)">Danger zone</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn danger" id="clearData">Clear all module data</button>
-        <button class="btn danger" id="deleteWs">Delete workspace</button></div>
-        <div class="note">Both actions are permanent. Export first.</div></div>`}
+      ${!ro && S.tasks.length+S.apps.length===0?'<div class="card span12"><h3>Sample data</h3><button class="btn" id="loadSample2">Load 3 rows per module</button></div>':''}
     </div>`;
-  }
-  if(ADMIN_TAB==='users'){
-    const me=USER?USER.id:'demo';
-    const users=S.adminUsers;
-    const status=u=>u.banned_until&&new Date(u.banned_until)>new Date()?'<span class="pill crit">Disabled</span>':u.must_change_password?'<span class="pill warn">Temp password</span>':!u.last_sign_in_at?'<span class="pill idle">Never signed in</span>':'<span class="pill good">Active</span>';
-    const rows=(users||S.members||[]).map(u=>{ const id=u.user_id; const mine=id===me; const dis=u.banned_until&&new Date(u.banned_until)>new Date();
-      return `<tr><td><span class="avatar" style="width:24px;height:24px;font-size:11px;display:inline-grid;margin-right:8px;vertical-align:middle">${esc((u.email||'?')[0].toUpperCase())}</span>${esc(u.email||'')}${mine?' <span class="pill info">you</span>':''}</td>
-        <td>${isOwner()&&!mine?`<select data-member="${id}">${L.roles.map(r=>`<option ${r===u.role?'selected':''}>${r}</option>`).join('')}</select>`:`<span class="role ${u.role}">${u.role}</span>`}</td>
-        <td>${status(u)}</td><td class="num">${u.last_sign_in_at?ago(u.last_sign_in_at):'—'}</td><td class="num">${u.joined||u.created_at?fmtD(String(u.joined||u.created_at).slice(0,10)):'—'}</td>
-        <td style="white-space:nowrap">${isOwner()&&!mine&&MODE!=='demo'?`<button class="btn" data-reset="${id}" style="padding:2px 8px;font-size:12px" title="Issue a new temporary password">Reset password</button> <button class="btn" data-toggle="${id}" data-enabled="${dis?'true':'false'}" style="padding:2px 8px;font-size:12px">${dis?'Enable':'Disable'}</button> <button class="del" data-remove="${id}" title="Remove from workspace">✕</button>`:''}</td></tr>`; }).join('');
-    const inviteRows=(S.invites||[]).filter(i=>!i.accepted_at).map(i=>`<tr><td>${esc(i.email)}</td><td><span class="role ${i.role}">${i.role}</span></td><td class="num">${fmtD(i.created_at.slice(0,10))}</td><td><button class="del" data-revoke="${i.id}" title="Revoke invite">✕</button></td></tr>`).join('');
-    const mail=S.mailConfig;
-    body=`<div class="grid g12">
-      <div class="card span12"><h3>Members <span class="hint">${(S.members||[]).length}${users?'':' · loading sign-in details…'}</span></h3>
-        <div class="tblwrap"><table class="tbl"><thead><tr><th>Person</th><th>Role</th><th>Status</th><th>Last sign-in</th><th>Joined</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty">No members yet.</td></tr>'}</tbody></table></div>
-        <div class="legend" style="margin-top:10px;flex-direction:column;gap:4px">${L.roles.map(r=>`<span><span class="role ${r}">${r}</span> &nbsp;${ROLE_DESC[r]}</span>`).join('')}</div></div>
-      ${isOwner()?`<div class="card span6"><h3>Create user access</h3>
-        <div class="inline-form"><div class="field"><label for="invEmail">Email</label><input id="invEmail" type="email" placeholder="name@example.com"></div><div class="field" style="flex:0 0 120px;min-width:120px"><label for="invRole">Role</label><select id="invRole"><option>editor</option><option>viewer</option></select></div><button class="btn primary" id="btnInvite" style="height:38px">Create & invite</button></div>
-        <div id="inviteResult"></div>
-        <div class="note">Creates the account immediately with a temporary password and adds it to this workspace. ${mail&&mail.email_configured?'The temporary password is emailed to them automatically.':'<b>Email delivery is not configured</b> — the temporary password will be shown here once for you to share securely. (Add a Resend API key to the admin-users function to enable automatic emails.)'} They must choose their own password on first sign-in.</div>
-        <h3 style="margin-top:14px">Legacy pending invites <span class="hint">${(S.invites||[]).filter(i=>!i.accepted_at).length}</span></h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Email</th><th>Role</th><th>Invited</th><th></th></tr></thead><tbody>${inviteRows||'<tr><td colspan="4" class="empty">None — accounts are now created directly.</td></tr>'}</tbody></table></div></div>
-      <div class="card span6"><h3>Sessions <span class="hint">server-side, from Supabase Auth</span></h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Person</th><th>Last active</th><th>Started</th><th>Device</th><th>IP</th></tr></thead><tbody>${(S.sessions||[]).slice(0,25).map(s=>`<tr><td>${esc(s.user_email)}</td><td class="num">${ago(s.last_active)}</td><td class="num">${ago(s.session_started)}</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${esc(s.user_agent||'')}">${esc((s.user_agent||'').replace(/Mozilla\/5.0 \(([^)]*)\).*/,'$1').slice(0,40))}</td><td class="id">${esc(s.ip||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No sessions loaded.</td></tr>'}</tbody></table></div></div>`
-      :`<div class="card span12"><h3>Your access</h3><span class="role ${ROLE}" style="font-size:14px;padding:6px 10px">${ROLE}</span><p class="note">${ROLE_DESC[ROLE]} Ask the workspace owner to change your role.</p></div>`}
-    </div>`;
-  }
-  if(ADMIN_TAB==='activity'){
-    const me=USER?USER.email:'you@demo.local';
-    const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email||'system',kind:['insert','update','delete'].includes(a.action)?'data':'access',what:`${a.action.replace(/_/g,' ')} ${a.table_name.replace(/_/g,' ')}${a.record_id&&a.record_id.length<12?' '+a.record_id:''}`,detail:a.summary||''}));
-    const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email||'',kind:e.event.startsWith('admin_')?'access':'session',what:e.event.replace(/_/g,' '),detail:e.detail&&Object.keys(e.detail).length?Object.entries(e.detail).filter(([k])=>k!=='mail_error').map(([k,v])=>`${k}: ${v}`).join(' · '):''}));
-    const all=[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when));
-    SL.activity=SL.activity||{};
-    const defs=[{k:'kind',label:'Type',opts:['data','access','session']},{k:'who',label:'Person'}];
-    const {rows}=applySlicers('activity',defs,all);
-    const q=(SL.activity._q||'').toLowerCase();
-    const shown=rows.filter(r=>!q||(r.what+' '+r.detail+' '+r.who).toLowerCase().includes(q)).slice(0,400);
-    const by={}; usage.forEach(e=>{by[e.who]=by[e.who]||{signins:0,views:0,exports:0,last:null}; if(e.what==='sign in') by[e.who].signins++; if(e.what==='view') by[e.who].views++; if(e.what.startsWith('export')) by[e.who].exports++; if(!by[e.who].last||e.when>by[e.who].last) by[e.who].last=e.when;});
-    audit.forEach(a=>{by[a.who]=by[a.who]||{signins:0,views:0,exports:0,last:null,edits:0}; by[a.who].edits=(by[a.who].edits||0)+1;});
-    body=`<div class="grid g12">
-      <div class="card span12"><h3>Per-user summary <span class="hint">${isOwner()?'all members':'your activity only'}</span></h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>Person</th><th style="text-align:right">Sign-ins</th><th style="text-align:right">Module views</th><th style="text-align:right">Data changes</th><th style="text-align:right">Exports</th><th>Last seen</th></tr></thead><tbody>${Object.entries(by).map(([w,v])=>`<tr><td>${esc(w)}</td><td class="num">${v.signins}</td><td class="num">${v.views}</td><td class="num">${v.edits||0}</td><td class="num">${v.exports}</td><td class="num">${v.last?ago(v.last):'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No activity yet.</td></tr>'}</tbody></table></div></div>
-      <div class="card span12"><h3>Detailed log <span class="hint">${all.length} entries · data changes, access changes, sessions & usage</span></h3>
-        ${slicerHTML('activity',defs,all)}
-        <div class="inline-form"><div class="field"><label for="actQ">Search</label><input id="actQ" type="search" value="${esc(SL.activity._q||'')}" placeholder="task, company, person, action…"></div><button class="btn" id="exportLog" style="height:38px">Export log (CSV)</button></div>
-        <div class="tblwrap"><table class="tbl"><thead><tr><th>When</th><th>Person</th><th>Type</th><th>Event</th><th>Detail</th></tr></thead><tbody>${shown.map(r=>`<tr><td class="num" title="${esc(r.when)}">${ago(r.when)}</td><td>${esc(r.who.split('@')[0])}</td><td><span class="pill ${r.kind==='data'?'info':r.kind==='access'?'warn':'idle'}">${r.kind}</span></td><td>${esc(r.what)}</td><td style="white-space:normal;max-width:520px">${esc(r.detail)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nothing matches.</td></tr>'}</tbody></table></div></div>
-    </div>`;
-  }
-  if(ADMIN_TAB==='health'){
-    const checks=healthChecks(); const groups=[...new Set(checks.map(c=>c.group))];
-    const counts={good:0,warn:0,crit:0,info:0}; checks.forEach(c=>counts[c.cls]++);
-    body=`<div class="kpis" style="margin-bottom:16px"><div class="kpi good"><div class="l">Passing</div><div class="v">${counts.good}</div></div><div class="kpi warn"><div class="l">Watch</div><div class="v">${counts.warn}</div></div><div class="kpi crit"><div class="l">Critical</div><div class="v">${counts.crit}</div></div><div class="kpi info"><div class="l">Informational</div><div class="v">${counts.info}</div></div></div>
-      <div class="grid g12">${groups.map(g=>`<div class="card span6"><h3>${g}</h3><ul class="alist">${checks.filter(c=>c.group===g).map(c=>`<li><span class="dot ${c.cls==='info'?'':c.cls}"></span><span><span class="t">${esc(c.name)}</span><div class="m">${esc(c.detail)}${c.fix?` <span style="color:var(--accent)">→ ${esc(c.fix)}</span>`:''}</div></span><span class="pill ${c.cls==='info'?'info':c.cls}">${c.cls==='good'?'OK':c.cls==='warn'?'Watch':c.cls==='crit'?'Critical':'Info'}</span></li>`).join('')}</ul></div>`).join('')}</div>`;
   }
   el.innerHTML=tabBar+body;
-  el.querySelectorAll('[data-atab]').forEach(b=>b.addEventListener('click',()=>{ ADMIN_TAB=b.dataset.atab; logEvent('view',{module:'admin',tab:ADMIN_TAB}); render(); if((ADMIN_TAB==='users'||ADMIN_TAB==='health')&&isOwner()&&!S.adminUsers) guarded(async()=>{ await db.loadAdmin(); render(); }); }));
-  if((ADMIN_TAB==='users'||ADMIN_TAB==='health')&&isOwner()&&!S.adminUsers) guarded(async()=>{ await db.loadAdmin(); render(); });
-  // ----- settings handlers -----
+  el.querySelectorAll('[data-atab]').forEach(b=>b.addEventListener('click',()=>{ ADMIN_TAB=b.dataset.atab; logEvent('view',{module:'admin',tab:ADMIN_TAB}); render(); }));
+  if(['users','audit','sessions','analytics'].includes(ADMIN_TAB)&&isOwner()&&!S.adminUsers) guarded(async()=>{ await db.loadAdmin(); render(); });
   const on=(id,fn)=>{ const x=el.querySelector('#'+id); if(x) x.addEventListener('click',fn); };
+  // ----- settings -----
   on('saveSettings',()=>guarded(async()=>{
     const num=id=>+el.querySelector('#'+id).value;
-    await db.saveSettings({readyGreen:num('thrReadyG'),readyYellow:num('thrReadyY'),runwayGreen:num('thrRunG'),runwayYellow:num('thrRunY'),dueSoonDays:num('thrSoon'),followWindowDays:num('thrFollow'),budgetCritPct:num('thrBudget'),weeklyAppTarget:num('thrApps'),weeklyNetworkTarget:num('thrNet'),financeVisibility:el.querySelector('#setFin').value});
+    await db.saveSettings({readyGreen:num('thrReadyG'),readyYellow:num('thrReadyY'),runwayGreen:num('thrRunG'),runwayYellow:num('thrRunY'),dueSoonDays:num('thrSoon'),followWindowDays:num('thrFollow'),budgetCritPct:num('thrBudget'),weeklyAppTarget:num('thrApps'),weeklyNetworkTarget:num('thrNet'),financeVisibility:el.querySelector('#setFin').value,appUrl:el.querySelector('#setUrl').value.trim()});
     const name=el.querySelector('#setName').value.trim(); if(name && name!==S.settings.name) await db.rename(name);
     await db.updateSettings({separationDate:el.querySelector('#setSep').value||S.settings.separationDate, weeklyRequirement:Math.max(1,num('setReq')||1)});
     logEvent('settings_change'); await refresh();
   },'Settings saved'));
   on('saveLists',()=>guarded(async()=>{ const lists={}; el.querySelectorAll('[data-list]').forEach(t=>{ const v=t.value.split('\n').map(s=>s.trim()).filter(Boolean); if(v.length && v.join('|')!==BASE_L[t.dataset.list].join('|')) lists[t.dataset.list]=v; }); await db.saveSettings({lists}); logEvent('settings_change',{lists:Object.keys(lists)}); render(); },'Lists saved'));
   on('resetLists',()=>guarded(async()=>{ await db.saveSettings({lists:{}}); render(); },'Default lists restored'));
-  on('exportJson',()=>{ const out={workspace:S.settings,settings:CFG,tasks:S.tasks,applications:S.apps,interviews:S.interviews,recruiters:S.recruiters,contacts:S.contacts,compliance:S.compliance,expenses:financeVisible()?S.expenses:undefined,cash:financeVisible()?S.cash:undefined,exported_at:new Date().toISOString()};
+  on('loadSample2',()=>guarded(async()=>{ await db.loadSample(); await refresh(); },'Sample data loaded'));
+  // ----- export / import -----
+  on('exportJson',()=>{ if(!canExport()) return toast('Not authorized'); const out={workspace:S.settings,settings:CFG,tasks:S.tasks,applications:S.apps,interviews:S.interviews,recruiters:S.recruiters,contacts:S.contacts,compliance:S.compliance,expenses:financeVisible()?S.expenses:undefined,cash:financeVisible()?S.cash:undefined,exported_at:new Date().toISOString()};
     const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(out,null,2)); a.download=`careershift-${T()}.json`; document.body.appendChild(a); a.click(); a.remove(); logEvent('export_json',{rows:S.tasks.length+S.apps.length}); toast('Workspace exported'); setTimeout(()=>refresh(),800); });
   on('exportCsvAll',()=>{ for(const c of ['tasks','apps','interviews','recruiters','contacts','compliance']) csvDownload(`careershift-${c}-${T()}.csv`, S[c]); setTimeout(()=>refresh(),800); });
-  on('loadSample2',()=>guarded(async()=>{ await db.loadSample(); await refresh(); },'Sample data loaded'));
+  const exportLog=()=>{ const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email,type:'data/access',event:a.action,table:a.table_name,record:a.record_id,detail:a.summary})); const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email,type:'session',event:e.event,table:'',record:'',detail:JSON.stringify(e.detail)})); csvDownload(`careershift-activity-${T()}.csv`,[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when))); };
+  on('exportLog',exportLog); on('exportLog2',exportLog);
+  const imp=el.querySelector('#impFile'); if(imp) imp.addEventListener('change',()=>{ const f=imp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>guarded(async()=>{ const obj=JSON.parse(rd.result); const counts=await db.importJson(obj); await refresh(); const box=document.querySelector('#impResult'); if(box) box.innerHTML=`<div class="msg ok">Imported: ${Object.entries(counts).map(([k,v])=>`${v} ${k}`).join(', ')||'nothing recognised'}.</div>`; },'Import complete'); rd.readAsText(f); });
   on('clearData',()=>{ if(!confirm('Delete every task, application, interview, recruiter, contact, compliance week and expense in this workspace? Members and settings are kept.')) return; guarded(async()=>{ await db.clearModules(); logEvent('clear_data'); await refresh(); },'Module data cleared'); });
   on('deleteWs',()=>{ if(prompt('Type DELETE to permanently remove this workspace and all its data.')!=='DELETE') return; guarded(async()=>{ await db.deleteWorkspace(); toast('Workspace deleted'); WS=null; S=null; try{localStorage.removeItem('careershift.ws');}catch(e){} enterApp(); }); });
-  // ----- users handlers -----
-  on('btnInvite',()=>guarded(async()=>{
-    const email=el.querySelector('#invEmail').value.trim().toLowerCase(), role=el.querySelector('#invRole').value;
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Enter a valid email');
-    const r=await db.admin({action:'invite',email,role});
-    const box=el.querySelector('#inviteResult');
-    box.innerHTML = r.emailed? `<div class="msg ok">Account created and a temporary password was emailed to <b>${esc(email)}</b>.</div>`
-      : r.temp_password? `<div class="msg info">Account created for <b>${esc(email)}</b>. Share this temporary password securely — it is shown only once:<br><code style="font-family:var(--mono);font-size:16px;user-select:all">${esc(r.temp_password)}</code> <button class="btn" id="copyPw" style="padding:2px 8px;font-size:12px">Copy</button><br><small>${esc(r.mail_error||'')}</small></div>`
-      : `<div class="msg ok">${esc(email)} already had an account — added to the workspace as ${role}.</div>`;
-    box.querySelector('#copyPw')?.addEventListener('click',()=>navigator.clipboard?.writeText(r.temp_password).then(()=>toast('Copied')));
-    S.adminUsers=null; await db.loadAll(); await db.loadAdmin(); el.querySelector('#invEmail').value='';
-    // re-render but keep the result box
-    const keep=box.innerHTML; render(); const nb=document.querySelector('#inviteResult'); if(nb) nb.innerHTML=keep; document.querySelector('#copyPw')?.addEventListener('click',()=>navigator.clipboard?.writeText(r.temp_password).then(()=>toast('Copied')));
-  }));
-  el.querySelectorAll('[data-member]').forEach(s=>s.addEventListener('change',()=>guarded(async()=>{ const {error}=await sb.from('workspace_members').update({role:s.value}).eq('workspace_id',WS.id).eq('user_id',s.dataset.member); if(error) throw error; S.adminUsers=null; await refresh(); await db.loadAdmin(); render(); },'Role updated')));
+  // ----- users -----
+  on('btnAddUser',()=>userModal(null));
+  const findU=id=>(S.adminUsers||S.members||[]).find(x=>x.user_id===id);
+  el.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>userModal(findU(b.dataset.edit))));
+  el.querySelectorAll('[data-kit]').forEach(b=>b.addEventListener('click',()=>kitModal(findU(b.dataset.kit),null,null)));
+  el.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>resetModal(findU(b.dataset.reset))));
   el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{ if(!confirm('Remove this member from the workspace? Their account stays but loses access.')) return; guarded(async()=>{ const {error}=await sb.from('workspace_members').delete().eq('workspace_id',WS.id).eq('user_id',b.dataset.remove); if(error) throw error; S.adminUsers=null; await refresh(); await db.loadAdmin(); render(); },'Member removed'); }));
-  el.querySelectorAll('[data-revoke]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ const {error}=await sb.from('workspace_invites').delete().eq('id',b.dataset.revoke); if(error) throw error; await refresh(); },'Invite revoked')));
-  el.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ const r=await db.admin({action:'reset_password',user_id:b.dataset.reset}); const box=document.createElement('div'); box.className='msg '+(r.emailed?'ok':'info'); box.innerHTML=r.emailed?'New temporary password emailed.':`New temporary password (shown once): <code style="font-family:var(--mono);font-size:15px;user-select:all">${esc(r.temp_password)}</code>`; b.closest('td').appendChild(box); S.adminUsers=null; await db.loadAdmin(); },'Temporary password issued')));
   el.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.admin({action:'set_enabled',user_id:b.dataset.toggle,enabled:b.dataset.enabled}); S.adminUsers=null; await db.loadAdmin(); render(); },'Account updated')));
-  // ----- activity handlers -----
+  on('refreshSessions',()=>guarded(async()=>{ await db.loadAdmin(); render(); },'Sessions refreshed'));
+  // ----- activity -----
   const q=el.querySelector('#actQ'); if(q) q.addEventListener('input',()=>{ SL.activity._q=q.value; const pos=q.selectionStart; render(); const nq=document.querySelector('#actQ'); if(nq){ nq.focus(); nq.setSelectionRange(pos,pos);} });
-  on('exportLog',()=>{ const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email,type:'data/access',event:a.action,table:a.table_name,record:a.record_id,detail:a.summary})); const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email,type:'session',event:e.event,table:'',record:'',detail:JSON.stringify(e.detail)})); csvDownload(`careershift-activity-${T()}.csv`,[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when))); });
 };
 
 /* ===================== Render ===================== */
 function render(keepFocus){
   if(!S) return;
   const v=VIEWS.find(x=>x.id===current) || VIEWS[1];
-  if(v.finance && !financeVisible()){ current='exec'; return render(); }
+  if((v.finance && !financeVisible()) || !moduleOk(v.group)){ current='exec'; return render(); }
   document.getElementById('pageTitle').textContent=v.title; document.getElementById('pageSub').textContent=v.sub;
   document.getElementById('asofDate').textContent=parse(T()).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
   document.getElementById('daySince').textContent=S.settings.separationDate? diffDays(T(),S.settings.separationDate):'—';
@@ -1102,7 +1289,7 @@ function render(keepFocus){
   document.getElementById('appShell').classList.toggle('ro', !canEdit()); document.getElementById('view').classList.remove('ro');
   const bn=document.getElementById('banner');
   bn.innerHTML = MODE==='demo'? `<div class="banner">Offline demo — data is stored only in this browser. <button class="btn" id="btnResetDemo" style="padding:3px 9px;font-size:12px">Reset sample data</button><button class="btn" id="btnExitDemo" style="padding:3px 9px;font-size:12px">Sign in to a real workspace</button></div>`
-    : (!canEdit()? `<div class="banner info">You have <b>viewer</b> access — everything is read-only.</div>` : (S.tasks.length+S.apps.length===0 && isOwner()? `<div class="banner info">Empty workspace. <button class="btn" id="btnSample" style="padding:3px 9px;font-size:12px">Load sample data (3 rows per module)</button> or start adding your own.</div>`:''));
+    : (!canEdit()? `<div class="banner info">You have <b>${ROLE}${ME.read_only?' (read-only)':''}</b> access — everything is read-only.</div>` : (S.tasks.length+S.apps.length===0 && isOwner()? `<div class="banner info">Empty workspace. <button class="btn" id="btnSample" style="padding:3px 9px;font-size:12px">Load sample data (3 rows per module)</button> or start adding your own.</div>`:''));
   bn.querySelector('#btnResetDemo')?.addEventListener('click',()=>{ S=demoSeed(); demoSave(); applySettings({}); render(); toast('Sample data restored'); });
   bn.querySelector('#btnExitDemo')?.addEventListener('click',()=>{ MODE='db'; S=null; showAuth(); });
   bn.querySelector('#btnSample')?.addEventListener('click',()=>guarded(async()=>{ await db.loadSample(); await refresh(); },'Sample data loaded'));
@@ -1152,13 +1339,13 @@ async function enterApp(preferWs, withSample){
   if(!USER) return showAuth('signin');
   if(USER.user_metadata && USER.user_metadata.must_change_password) return showAuth('setpw');
   try{ await sb.rpc('accept_pending_invites'); }catch(e){ console.warn(e); }
-  const {data:mems,error} = await sb.from('workspace_members').select('workspace_id, role, workspaces(id,name,separation_date,weekly_requirement,owner_id,settings)').eq('user_id',USER.id).order('created_at');
+  const {data:mems,error} = await sb.from('workspace_members').select('workspace_id, role, can_export, read_only, modules, first_name, last_name, display_name, workspaces(id,name,separation_date,weekly_requirement,owner_id,settings)').eq('user_id',USER.id).order('created_at');
   if(error){ return showAuth('signin',{cls:'err',text:error.message}); }
   if(!mems || !mems.length) return showAuth('workspace');
   let pick = mems.find(m=>m.workspace_id===preferWs) || mems.find(m=>m.role==='owner') || mems[0];
   try{ const saved=localStorage.getItem('careershift.ws'); const s2=mems.find(m=>m.workspace_id===saved); if(!preferWs && s2) pick=s2; }catch(e){}
   const firstEntry = !WS;
-  WS = pick.workspaces; ROLE = pick.role; applySettings(WS.settings);
+  WS = pick.workspaces; ROLE = pick.role; ME = {can_export:pick.can_export, read_only:pick.read_only, modules:pick.modules, first_name:pick.first_name, last_name:pick.last_name, display_name:pick.display_name}; applySettings(WS.settings);
   try{ localStorage.setItem('careershift.ws', WS.id); }catch(e){}
   if(firstEntry) logEvent('sign_in',{role:ROLE});
   if(withSample){ try{ await db.loadSample(); }catch(e){ console.error(e); toast('Sample data failed: '+e.message); } }
@@ -1176,7 +1363,7 @@ async function enterApp(preferWs, withSample){
 
 /* ===================== Boot ===================== */
 document.getElementById('btnSignOut').addEventListener('click',async()=>{ if(MODE==='demo'){ MODE='db'; S=null; showAuth(); return; } logEvent('sign_out'); await new Promise(r=>setTimeout(r,250)); await sb.auth.signOut(); });
-document.getElementById('btnDemo').addEventListener('click',async()=>{ MODE='demo'; ROLE='owner'; USER=null; WS=null; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true}); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render(); });
+document.getElementById('btnDemo').addEventListener('click',async()=>{ MODE='demo'; ROLE='owner'; ME={}; USER=null; WS=null; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true}); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render(); });
 try{ const mq=matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change',()=>render()); new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']}); }catch(e){}
 (async function boot(){
   if(!window.supabase){ showAuth('signin',{cls:'err',text:'Could not load the Supabase client — this page must be opened from a normal web host or local file, not inside a sandboxed preview. The offline demo below still works.'}); return; }
@@ -1186,7 +1373,7 @@ try{ const mq=matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('c
     if(event==='SIGNED_OUT'){ USER=null; WS=null; S=null; if(rtChannel){ sb.removeChannel(rtChannel); rtChannel=null; } showAuth('signin',{cls:'ok',text:'Signed out.'}); }
   });
   if(/claude(usercontent)?\.(ai|com)$/.test(location.hostname)){ // hosted preview cannot reach Supabase (CSP) — run the offline demo
-    MODE='demo'; ROLE='owner'; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true}); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render();
+    MODE='demo'; ROLE='owner'; ME={}; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true}); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render();
     document.getElementById('banner').insertAdjacentHTML('afterbegin','<div class="banner info">Preview copy — this page runs the offline demo. Download <b>CareerShift.html</b> and open or host it to sign in and collaborate with your team.</div>'); return; }
   const {data:{session}} = await sb.auth.getSession();
   if(session) enterApp(); else showAuth('signin');
