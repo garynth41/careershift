@@ -1,0 +1,1476 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="application-name" content="CareerShift"><meta name="version" content="1.6.0"><meta name="build" content="20260912.2130-694172c"><title>CareerShift</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232a78d6'/%3E%3Cpath d='M14 46h13V33h13V20h10' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M43 12l8 8-8 8' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.3/plotly.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --ground:#f3f5f8; --surface:#ffffff; --surface-2:#f8fafc; --line:#dde3ea; --line-2:#eef1f5;
+  --ink:#14213d; --ink-2:#4c5a6e; --ink-3:#7d8899;
+  --accent:#2a78d6; --accent-deep:#1c5cab; --accent-soft:#e3eefc;
+  --good:#1a8c4e; --good-soft:#dff3e7; --warn:#d99000; --warn-soft:#fff2cc; --crit:#d9403f; --crit-soft:#fde3e3;
+  --soon:#e26a2c; --soon-soft:#fde8dc; --idle:#8b95a1; --idle-soft:#e9edf1; --wait:#6b5bd6; --wait-soft:#e9e6fb;
+  --rail:#14213d; --rail-ink:#c9d3e3; --rail-active:#2a78d6;
+  --shadow:0 1px 2px rgba(20,33,61,.06),0 4px 14px rgba(20,33,61,.05);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#12161c; --surface:#1a2029; --surface-2:#1f2733; --line:#2b3440; --line-2:#242d39;
+    --ink:#eef1f5; --ink-2:#b4bdc9; --ink-3:#7f8a99;
+    --accent:#3987e5; --accent-deep:#6da7ec; --accent-soft:#1c2f4a;
+    --good:#3fbf76; --good-soft:#153826; --warn:#f0b429; --warn-soft:#3d2f0a; --crit:#f06a69; --crit-soft:#3f1a1a;
+    --soon:#f0834e; --soon-soft:#3f2416; --idle:#8b95a1; --idle-soft:#2a323d; --wait:#a99cf2; --wait-soft:#2a2547;
+    --rail:#0d1117; --rail-ink:#aab4c3; --rail-active:#3987e5;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#12161c; --surface:#1a2029; --surface-2:#1f2733; --line:#2b3440; --line-2:#242d39;
+  --ink:#eef1f5; --ink-2:#b4bdc9; --ink-3:#7f8a99;
+  --accent:#3987e5; --accent-deep:#6da7ec; --accent-soft:#1c2f4a;
+  --good:#3fbf76; --good-soft:#153826; --warn:#f0b429; --warn-soft:#3d2f0a; --crit:#f06a69; --crit-soft:#3f1a1a;
+  --soon:#f0834e; --soon-soft:#3f2416; --idle:#8b95a1; --idle-soft:#2a323d; --wait:#a99cf2; --wait-soft:#2a2547;
+  --rail:#0d1117; --rail-ink:#aab4c3; --rail-active:#3987e5;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+/* rail */
+.rail{background:var(--rail);color:var(--rail-ink);padding-block:18px;padding-inline:14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:12px}
+.brand .mark{width:30px;height:30px;border-radius:7px;background:var(--rail-active);display:grid;place-items:center;font-family:var(--mono);font-weight:600;color:#fff;font-size:12px}
+.brand b{color:#fff;font-weight:600;font-size:14px;display:block;line-height:1.15}
+.brand small{font-size:11px;opacity:.7;letter-spacing:.04em;text-transform:uppercase}
+.zone{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.55;padding:12px 8px 4px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 8px;color:var(--rail-ink);cursor:pointer;font-size:13px}
+.nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav button.active{background:var(--rail-active);color:#fff}
+.nav button:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.nav .n{font-family:var(--mono);font-size:11px;opacity:.6;width:16px}
+.nav .badge{margin-left:auto;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.12);padding:1px 6px;border-radius:9px}
+.nav button.active .badge{background:rgba(255,255,255,.25)}
+/* main */
+.main{padding-block:20px 48px;padding-inline:28px;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.topbar h1{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.topbar .sub{color:var(--ink-3);font-size:13px;margin-top:2px}
+.asof{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.asof .chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink-2)}
+.asof .chip b{font-family:var(--mono);color:var(--ink);font-weight:500}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--ink)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-deep);color:#fff}
+.btn.danger{color:var(--crit)}
+.btn:focus-visible,.slicer button:focus-visible,.tbl input:focus-visible,.tbl select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* sections */
+.grid{display:grid;gap:16px}
+.g12{grid-template-columns:repeat(12,minmax(0,1fr))}
+.span3{grid-column:span 3}.span4{grid-column:span 4}.span6{grid-column:span 6}.span8{grid-column:span 8}.span12{grid-column:span 12}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px 18px;min-width:0}
+.card h3{margin:0 0 10px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink-2);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.card h3 .hint{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-size:12px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px 12px 16px;position:relative;box-shadow:var(--shadow);min-width:0}
+.kpi::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 3px 3px 0;background:var(--idle)}
+.kpi.good::before{background:var(--good)}.kpi.warn::before{background:var(--warn)}.kpi.crit::before{background:var(--crit)}.kpi.info::before{background:var(--accent)}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.03em;text-transform:uppercase}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px;display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--idle)}
+.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.dot.crit{background:var(--crit)}
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:500;white-space:nowrap;background:var(--idle-soft);color:var(--ink-2)}
+.pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.soon{background:var(--soon-soft);color:var(--soon)}.pill.info{background:var(--accent-soft);color:var(--accent)}.pill.wait{background:var(--wait-soft);color:var(--wait)}
+/* slicers */
+.slicers{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;align-items:flex-start}
+.slicer{display:flex;flex-direction:column;gap:5px}
+.slicer .sl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.slicer .opts{display:flex;flex-wrap:wrap;gap:4px}
+.slicer button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;color:var(--ink-2)}
+.slicer button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.slicer button:hover:not(.on){border-color:var(--accent)}
+/* tables */
+.tblwrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.tbl th{position:sticky;top:0;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:8px 8px;border-bottom:1px solid var(--line);background:var(--surface);white-space:nowrap;font-weight:600}
+.tbl td{padding:4px 6px;border-bottom:1px solid var(--line-2);vertical-align:middle;white-space:nowrap}
+.tbl tr.st-good td:first-child{box-shadow:inset 4px 0 0 var(--good)}
+.tbl tr.st-warn td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+.tbl tr.st-crit td:first-child{box-shadow:inset 4px 0 0 var(--crit)}
+.tbl tr.st-soon td:first-child{box-shadow:inset 4px 0 0 var(--soon)}
+.tbl tr.st-idle td:first-child{box-shadow:inset 4px 0 0 var(--idle)}
+.tbl tr.st-wait td:first-child{box-shadow:inset 4px 0 0 var(--wait)}
+.tbl input,.tbl select{width:100%;border:1px solid transparent;background:transparent;border-radius:4px;padding:4px 6px;min-width:70px}
+.tbl input:hover,.tbl select:hover{border-color:var(--line)}
+.tbl input:focus,.tbl select:focus{background:var(--surface-2);border-color:var(--accent)}
+.tbl input[type=number]{font-family:var(--mono);text-align:right;min-width:60px}
+.tbl input[type=date]{font-family:var(--mono);font-size:12.5px;min-width:130px}
+.tbl .num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.tbl .id{font-family:var(--mono);color:var(--ink-3);font-size:12px}
+.tbl .del{background:none;border:0;color:var(--ink-3);cursor:pointer;padding:2px 6px;border-radius:4px}
+.tbl .del:hover{color:var(--crit);background:var(--crit-soft)}
+.tbl tfoot td{font-weight:600;border-top:1px solid var(--line);background:var(--surface-2)}
+.tblhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.tblhead .cnt{color:var(--ink-3);font-size:12.5px}
+.pivot td,.pivot th{padding:6px 10px}
+.pivot td.num{font-family:var(--mono);text-align:right}
+/* lists */
+.alist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.alist li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line-2)}
+.alist li:last-child{border-bottom:0}
+.alist .t{font-weight:500}
+.alist .m{font-size:12px;color:var(--ink-3)}
+.alist .d{font-family:var(--mono);font-size:12px;color:var(--ink-2);text-align:right;white-space:nowrap}
+.pri{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#fff;background:var(--idle)}
+.pri.p1{background:var(--crit)}.pri.p2{background:var(--soon)}.pri.p3{background:var(--accent)}.pri.p4{background:var(--good)}.pri.p5{background:var(--wait)}
+.empty{color:var(--ink-3);font-size:13px;padding:10px 4px}
+/* gauges and charts */
+.chart{width:100%;min-height:220px}
+.chart.tall{min-height:300px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+/* inputs form */
+.form{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.form label{font-size:13px;color:var(--ink-2)}
+.form input{font-family:var(--mono);text-align:right;width:150px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface-2)}
+.form input:focus{border-color:var(--accent);outline:none}
+.form .out{font-family:var(--mono);text-align:right;font-weight:600}
+.form .sep{grid-column:1/-1;border-top:1px solid var(--line);margin:4px 0}
+.bigstat{display:flex;align-items:baseline;gap:8px;margin:6px 0 2px}
+.bigstat .v{font-family:var(--mono);font-size:36px;font-weight:600;line-height:1}
+.bigstat .u{color:var(--ink-3)}
+.bar{height:8px;border-radius:4px;background:var(--line-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.score-row{display:grid;grid-template-columns:140px 1fr 56px;gap:10px;align-items:center;padding:5px 0}
+.score-row input[type=range]{width:100%;accent-color:var(--accent)}
+.score-row .sv{font-family:var(--mono);text-align:right}
+.note{font-size:12px;color:var(--ink-3);margin-top:8px}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:var(--ground);padding:9px 14px;border-radius:8px;font-size:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.sample{font-size:11px;color:var(--ink-3);border:1px dashed var(--line);border-radius:6px;padding:4px 8px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;padding-block:12px}
+  .nav{flex-direction:row;flex-wrap:wrap}
+  .nav button{width:auto}
+  .zone{display:none}
+  .main{padding-inline:16px}
+  .span3,.span4,.span6,.span8{grid-column:span 12}
+}
+
+/* brand */
+.brand .mark{background:none;width:34px;height:34px;padding:0}
+.brand .mark svg{width:34px;height:34px;display:block}
+.brand b{font-size:16px;letter-spacing:-.01em}
+/* auth */
+.auth{min-height:100vh;display:grid;place-items:center;background:var(--ground);padding:24px 16px}
+.auth-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:28px 28px 24px}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.auth-brand svg{width:44px;height:44px}
+.auth-brand b{font-size:22px;font-weight:600;letter-spacing:-.01em;display:block;line-height:1.1}
+.auth-brand small{color:var(--ink-3);font-size:12.5px}
+.auth h2{font-size:15px;font-weight:600;margin:18px 0 10px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--ink-2);letter-spacing:.02em}
+.field input,.field select{border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--surface-2);font-size:14px}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.btn.block{width:100%;padding:10px 12px;font-weight:600;font-size:14px}
+.auth .links{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:12.5px;flex-wrap:wrap}
+.auth .links button{background:none;border:0;color:var(--accent);cursor:pointer;padding:0;font-size:12.5px}
+.msg{font-size:13px;border-radius:7px;padding:9px 11px;margin-top:10px}
+.msg.err{background:var(--crit-soft);color:var(--crit)}.msg.ok{background:var(--good-soft);color:var(--good)}.msg.info{background:var(--accent-soft);color:var(--accent)}
+.demo-note{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+/* app chrome */
+.userbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.banner{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner.info{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.ro .tbl input,.ro .tbl select,.ro .form input,.ro input[type=range]{pointer-events:none;opacity:.85}
+.ro [data-add],.ro .del,.ro #req{display:none}
+.role{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:var(--idle-soft);color:var(--ink-2)}
+.role.owner{background:var(--accent-soft);color:var(--accent)}.role.editor{background:var(--good-soft);color:var(--good)}.role.viewer{background:var(--warn-soft);color:var(--warn)}
+.feed li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:7px 4px;border-bottom:1px solid var(--line-2);font-size:13px}
+.feed .who{font-weight:500}
+.feed .when{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.inline-form .field{margin:0;min-width:180px;flex:1}
+.sync{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.sync i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:1px}
+.sync.off i{background:var(--idle)}
+/* version stamp */
+.railfoot{margin-top:auto;padding:14px 8px 4px;font-size:11px;color:var(--rail-ink);opacity:.75;font-family:var(--mono);cursor:pointer;border-top:1px solid rgba(255,255,255,.08);line-height:1.5}
+.railfoot b{color:#fff;font-weight:600}.railfoot span{opacity:.7}
+.railfoot:hover{opacity:1}
+.rail{display:flex;flex-direction:column}
+/* access block in user form */
+.acc{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:4px 0 12px;background:var(--surface-2)}
+.acc-h{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;margin-bottom:6px}
+.acc-row{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line-2)}
+.acc-l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding-top:4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:13px;cursor:pointer;background:var(--surface)}
+.seg label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.seg input{accent-color:var(--accent)}
+.acc-sum{margin-top:8px;padding:8px 10px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:12.5px}
+.acc .chk{margin:4px 0}
+/* onboarding kit */
+.pwbox{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:9px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap}
+.pwbox span{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--warn)}
+.pwbox code{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:.04em;user-select:all;color:var(--ink)}
+.draft{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.draft-row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line-2);font-size:13px}
+.draft-row span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.draft-row input{border:0;background:transparent;font-weight:600;padding:2px 0}
+.draft-row input:focus{outline:none;border-bottom:1px solid var(--accent)}
+.draft textarea{width:100%;border:0;padding:12px;font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--surface-2);resize:vertical;display:block}
+.draft textarea:focus{outline:none}
+.kit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn.wa{background:#25d366;border-color:#25d366;color:#fff;text-decoration:none}
+.btn.wa:hover{background:#1ebe5b;color:#fff}
+/* modal */
+.modal-back{position:fixed;inset:0;background:rgba(10,16,28,.55);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{width:100%;max-width:640px;max-height:92vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:15px}
+.mclose{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-3)}
+.mbody{padding:16px 18px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0;cursor:pointer}
+.chk input{accent-color:var(--accent);width:15px;height:15px}
+.pwrow{display:flex;gap:6px;align-items:stretch}.pwrow input{flex:1;min-width:0}.pwrow input[id$='Pw'],.pwrow input#pw,.pwrow input#pw2{font-family:var(--mono)}
+.btn.eye{padding:0 10px;display:grid;place-items:center;color:var(--ink-2);flex:0 0 auto}.btn.eye:hover{color:var(--accent)}.btn.eye[aria-pressed=true]{color:var(--accent);border-color:var(--accent)}
+.auth .pwrow input{border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--surface-2);font-size:14px}.auth .pwrow input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.kit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+.kv{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.kv span{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.kv code{font-family:var(--mono);font-size:13px;word-break:break-all;user-select:all}
+@media (max-width:600px){.grid2,.kit-grid{grid-template-columns:1fr}}
+[hidden]{display:none!important}
+</style></head><body>
+<!-- ===================== AUTH SCREEN ===================== -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2a78d6"/><path d="M14 46h13V33h13V20h10" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M43 12l8 8-8 8" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>CareerShift</b><small>Career transition operating system</small></div></div>
+    <div id="authBody"></div>
+    <div class="demo-note" id="authVersion" style="text-align:center;font-family:var(--mono);font-size:11px"></div>
+    <div class="demo-note">No account? Ask the workspace owner for an invite, or <button class="btn" id="btnDemo" style="padding:3px 9px;font-size:12px">open the offline demo</button> with sample data (saved only in this browser).</div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div class="app" id="appShell" hidden>
+  <aside class="rail">
+    <div class="brand"><div class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#2a78d6"/><path d="M14 46h13V33h13V20h10" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M43 12l8 8-8 8" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>CareerShift</b><small id="wsName">Workspace</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="railfoot" id="railVersion" title="Click for release notes"></div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div><h1 id="pageTitle">Executive Dashboard</h1><div class="sub" id="pageSub"></div></div>
+      <div class="asof">
+        <span class="chip">As of <b id="asofDate"></b></span>
+        <span class="chip">Day <b id="daySince"></b> since separation</span>
+        <span class="userbox"><span class="avatar" id="avatar"></span><span id="whoami" style="font-size:12.5px"></span><span class="role" id="myRole"></span></span>
+        <button class="btn" id="btnSignOut">Sign out</button>
+      </div>
+    </div>
+    <div id="banner"></div>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="modal-back" id="modalBack" hidden><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== Config ===================== */
+const SUPABASE_URL = 'https://jowuuzppfhqgusxqoqdk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_i4QVpMOTPK5UYUvOBs1IEA_divV3SpL';
+const APP_NAME = 'CareerShift';
+const APP_VERSION = '1.6.0';            // bump on every release (semver)
+const APP_BUILD = '20260912.2130-694172c';          // stamped by build.py (UTC date-time + content hash)
+let LATEST = null;                      // latest released version, read from app_meta at sign-in
+function cmpVer(a,b){ const x=String(a).split('.').map(Number), y=String(b).split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0)>(y[i]||0)) return 1; if((x[i]||0)<(y[i]||0)) return -1; } return 0; }
+const versionLabel = () => `v${APP_VERSION} · build ${APP_BUILD}`;
+
+/* ===================== Utilities ===================== */
+const DAY = 86400000;
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => { const d=new Date(); d.setHours(0,0,0,0); return d; };
+const T = () => iso(today());
+const addDays = (s,n) => { const d = s instanceof Date ? new Date(s) : parse(s); d.setDate(d.getDate()+n); return iso(d); };
+const parse = s => { if(!s) return null; const [y,m,d]=String(s).slice(0,10).split('-').map(Number); return new Date(y,m-1,d); };
+const diffDays = (a,b) => Math.round((parse(a)-parse(b))/DAY);
+const fmtD = s => { if(!s) return '—'; return parse(s).toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
+const fmtDY = s => { if(!s) return '—'; return parse(s).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); };
+const fmtMoney = n => (n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();
+const monthKey = s => s ? String(s).slice(0,7) : '';
+const monthLabel = k => { const [y,m]=k.split('-'); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'}); };
+const quarterKey = s => { if(!s) return ''; const d=parse(s); return `${d.getFullYear()} Q${Math.floor(d.getMonth()/3)+1}`; };
+const weekEnding = s => { const d=parse(s); const dow=d.getDay(); d.setDate(d.getDate()+((6-dow+7)%7)); return iso(d); };
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sum = a => a.reduce((x,y)=>x+(+y||0),0);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x'+Math.random().toString(36).slice(2));
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const toast = m => { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); };
+const ago = ts => { const s=(Date.now()-new Date(ts))/1000; if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago'; if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; };
+
+/* ---- configurable settings (merged with workspaces.settings) ---- */
+const CFG_DEFAULTS = { appUrl:'', readyGreen:85, readyYellow:70, runwayGreen:12, runwayYellow:6, dueSoonDays:3, followWindowDays:7, budgetCritPct:10,
+  weeklyAppTarget:5, weeklyNetworkTarget:3, financeVisibility:'owner', lists:{} };
+let CFG = {...CFG_DEFAULTS};
+const BASE_L = {};
+function applySettings(settings){
+  CFG = {...CFG_DEFAULTS, ...(settings||{})}; CFG.lists = CFG.lists||{};
+  for(const k of Object.keys(BASE_L)) L[k] = (Array.isArray(CFG.lists[k]) && CFG.lists[k].length)? CFG.lists[k] : BASE_L[k];
+}
+const financeVisible = () => isOwner() || CFG.financeVisibility==='members';
+const financeEditable = () => isOwner() || (ROLE==='editor' && CFG.financeVisibility==='members');
+/* ===================== Domain lists ===================== */
+const L = {
+  priority:['Critical','High','Medium','Low'],
+  status:['Not Started','In Progress','Waiting','Blocked','Complete'],
+  category:['Applications','Networking','Recruiters','Interview Prep','Finance','Compliance','Admin','Skills'],
+  source:['LinkedIn','Indeed','CareerBuilder','Monster','Company Website','Referral','Recruiter','Networking','Other'],
+  stage:['Applied','Recruiter Screen','Hiring Manager','Panel Interview','Final Interview','Offer','Rejected'],
+  appStatus:['Active','Waiting','On Hold','Closed'],
+  intStage:['Recruiter Screen','Hiring Manager','Panel','Technical','Executive','Final Interview','Offer','Rejected'],
+  intType:['Phone','Video','On-site','Take-home'],
+  outcome:['Pending','Advanced','Rejected','Offer','Withdrew'],
+  recStatus:['New','Contacted','Active','Interviewing','Offer','Closed'],
+  relationship:['Former Colleague','Former Manager','Industry Peer','Mentor','Friend','Alumni','Vendor','Other'],
+  referral:['High','Medium','Low','None'],
+  method:['Email','Phone','LinkedIn','Coffee','Video','Text'],
+  netStatus:['To Contact','Contacted','Engaged','Referral Asked','Referral Received','Dormant'],
+  roles:['owner','editor','viewer'],
+};
+const LIST_LABELS = {priority:'Task priority',status:'Task status',category:'Task category',source:'Job source',stage:'Application stage',appStatus:'Application status',intStage:'Interview stage',intType:'Interview type',outcome:'Interview outcome',recStatus:'Recruiter status',relationship:'Relationship',referral:'Referral potential',method:'Contact method',netStatus:'Networking status'};
+Object.keys(LIST_LABELS).forEach(k=>BASE_L[k]=L[k].slice());
+/* collection -> table */
+const TABLE = {tasks:'tasks',apps:'applications',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance_weeks',expenses:'expenses'};
+const PREFIX = {tasks:'T',apps:'A',interviews:'I',recruiters:'R',contacts:'N',compliance:'C',expenses:'E'};
+
+/* ===================== Seed data (3 rows per module, dated relative to today) ===================== */
+function seed(){
+  const t = T();
+  return {
+    settings:{ separationDate: addDays(t,-29), weeklyRequirement:2 },
+    tasks:[
+      {ref:'T-001',category:'Applications',task:'Apply to Senior Tax Data Manager role',subtask:'Tailor résumé to posting',start:addDays(t,-3),due:t,priority:'Critical',status:'In Progress',owner:'Me',notes:'Posting closes tonight',progress:60},
+      {ref:'T-002',category:'Networking',task:'Reconnect with former VP',subtask:'Send LinkedIn message + schedule coffee',start:addDays(t,-10),due:addDays(t,-2),priority:'High',status:'Not Started',owner:'Me',notes:'Overdue — she offered a referral',progress:0},
+      {ref:'T-003',category:'Interview Prep',task:'Prepare STAR stories for panel',subtask:'Draft 6 stories, rehearse 3',start:addDays(t,-1),due:addDays(t,4),priority:'High',status:'In Progress',owner:'Me',notes:'Panel is next week',progress:35},
+    ],
+    apps:[
+      {ref:'A-001',company:'Meridian Aviation Group',position:'Director, Tax Technology',salary:'$165k–$185k',location:'Columbus, OH (Hybrid)',source:'Referral',applied:addDays(t,-18),stage:'Panel Interview',recruiter:'Dana Whitfield',next:'Panel interview prep',status:'Active',notes:'Referred by former VP'},
+      {ref:'A-002',company:'Northstar Logistics',position:'Senior Manager, Indirect Tax',salary:'$140k–$160k',location:'Remote',source:'LinkedIn',applied:addDays(t,-9),stage:'Recruiter Screen',recruiter:'Marcus Bell',next:'Await hiring manager slot',status:'Waiting',notes:'Screen went well'},
+      {ref:'A-003',company:'Cobalt Analytics',position:'Data Engineering Lead',salary:'$150k–$170k',location:'Cincinnati, OH',source:'Recruiter',applied:addDays(t,-31),stage:'Rejected',recruiter:'Priya Raman',next:'Ask for feedback',status:'Closed',notes:'Went with internal candidate'},
+    ],
+    interviews:[
+      {ref:'I-001',company:'Meridian Aviation Group',position:'Director, Tax Technology',date:addDays(t,5),stage:'Panel',type:'On-site',interviewer:'CFO + Tax Director + IT Lead',outcome:'Pending',notes:'90 min; bring Avalara case study',research:80,star:60,technical:75,leadership:70,questions:50},
+      {ref:'I-002',company:'Northstar Logistics',position:'Senior Manager, Indirect Tax',date:addDays(t,-4),stage:'Recruiter Screen',type:'Phone',interviewer:'Marcus Bell',outcome:'Advanced',notes:'Comp aligned; next is HM',research:90,star:85,technical:90,leadership:85,questions:90},
+      {ref:'I-003',company:'Cobalt Analytics',position:'Data Engineering Lead',date:addDays(t,-20),stage:'Hiring Manager',type:'Video',interviewer:'Head of Data',outcome:'Rejected',notes:'Asked deep Spark questions',research:70,star:65,technical:55,leadership:70,questions:60},
+    ],
+    recruiters:[
+      {ref:'R-001',name:'Dana Whitfield',agency:'Internal (Meridian)',company:'Meridian Aviation Group',phone:'614-555-0142',email:'dwhitfield@example.com',linkedin:'linkedin.com/in/dwhitfield',last:addDays(t,-3),next:t,status:'Interviewing',notes:'Confirm panel logistics'},
+      {ref:'R-002',name:'Marcus Bell',agency:'Robert Half',company:'Northstar Logistics',phone:'312-555-0188',email:'mbell@example.com',linkedin:'linkedin.com/in/marcusbell',last:addDays(t,-6),next:addDays(t,-1),status:'Active',notes:'Overdue follow-up on HM timing'},
+      {ref:'R-003',name:'Priya Raman',agency:'Korn Ferry',company:'Various',phone:'513-555-0161',email:'praman@example.com',linkedin:'linkedin.com/in/priyaraman',last:addDays(t,-12),next:addDays(t,3),status:'Contacted',notes:'Has two more data roles opening'},
+    ],
+    contacts:[
+      {ref:'N-001',person:'Angela Moreno',company:'Meridian Aviation Group',title:'VP Finance',relationship:'Former Manager',referral:'High',last:addDays(t,-14),next:addDays(t,-2),method:'Coffee',status:'Referral Received',notes:'Referred me for Director role'},
+      {ref:'N-002',person:'Tom Okafor',company:'Vertex Inc.',title:'Solutions Architect',relationship:'Industry Peer',referral:'Medium',last:addDays(t,-5),next:addDays(t,2),method:'LinkedIn',status:'Referral Asked',notes:'Knows Avalara/Vertex hiring managers'},
+      {ref:'N-003',person:'Lisa Chen',company:'Ohio State Alumni',title:'Data Platform Manager',relationship:'Alumni',referral:'Low',last:addDays(t,-1),next:addDays(t,6),method:'Email',status:'Engaged',notes:'Intro call went well'},
+    ],
+    compliance:[
+      {ref:'C-001',week:weekEnding(addDays(t,-14)),apps:3,networking:2,recruiters:1,training:1,notes:'Registered with OhioMeansJobs'},
+      {ref:'C-002',week:weekEnding(addDays(t,-7)),apps:1,networking:1,recruiters:0,training:0,notes:'Light week — travel'},
+      {ref:'C-003',week:weekEnding(t),apps:1,networking:2,recruiters:2,training:0,notes:'In progress'},
+    ],
+    expenses:[
+      {type:'Fixed',category:'Mortgage/Rent',budget:2100,actual:2100,sort_order:1},{type:'Fixed',category:'Utilities',budget:280,actual:312,sort_order:2},{type:'Fixed',category:'Insurance',budget:640,actual:640,sort_order:3},{type:'Fixed',category:'Phone',budget:95,actual:95,sort_order:4},{type:'Fixed',category:'Internet',budget:80,actual:80,sort_order:5},
+      {type:'Variable',category:'Food',budget:700,actual:642,sort_order:6},{type:'Variable',category:'Gas',budget:180,actual:205,sort_order:7},{type:'Variable',category:'Entertainment',budget:120,actual:160,sort_order:8},{type:'Variable',category:'Shopping',budget:150,actual:98,sort_order:9},{type:'Variable',category:'Other',budget:200,actual:110,sort_order:10},
+    ],
+    cash:{ savings:24000, checking:6500, severance:18000, investments:15000, unemployment:2300, other:400 },
+    members:[], invites:[], activity:[],
+  };
+}
+
+/* ===================== State & session ===================== */
+let S;                       // data for the active workspace
+let MODE = 'db';             // 'db' (Supabase) | 'demo' (localStorage)
+let sb = null, USER = null, WS = null, ROLE = 'viewer', ME = {};
+let current = 'exec';
+const isOwner = () => ROLE==='owner', canEdit = () => ROLE==='owner'||(ROLE==='editor' && !ME.read_only);
+const canExport = () => isOwner() || !!ME.can_export;
+const MODULE_GROUPS = {tasks:'Tasks & Gantt', pipeline:'Applications, Analytics & Interviews', relationships:'Recruiters & Networking', compliance:'Unemployment compliance'};
+const moduleOk = g => !g || isOwner() || !ME.modules || !ME.modules.length || ME.modules.includes(g);
+const appUrl = () => (CFG.appUrl||'').trim() || location.href.split('#')[0];
+const DEMO_KEY='careershift.demo.v1';
+
+/* ---- data adapter: every mutation goes through here ---- */
+const db = {
+  async loadAll(){
+    if(MODE==='demo'){ try{ const j=localStorage.getItem(DEMO_KEY); S = j? JSON.parse(j) : demoSeed(); }catch(e){ S=demoSeed(); } applySettings(S.settingsRaw||{}); return; }
+    const q = (t, order) => sb.from(t).select('*').eq('workspace_id', WS.id).order(order||'created_at',{ascending:true});
+    const [tasks,apps,ints,recs,cons,comp,exp,cash,mem,inv,act] = await Promise.all([
+      q('tasks'), q('applications'), q('interviews'), q('recruiters'), q('contacts'), q('compliance_weeks','week'), q('expenses','sort_order'),
+      sb.from('cash_inputs').select('*').eq('workspace_id',WS.id).maybeSingle(),
+      sb.from('workspace_members').select('*').eq('workspace_id',WS.id).order('created_at'),
+      isOwner()? sb.from('workspace_invites').select('*').eq('workspace_id',WS.id).is('accepted_at',null).order('created_at') : Promise.resolve({data:[]}),
+      sb.from('activity_log').select('*').eq('workspace_id',WS.id).order('created_at',{ascending:false}).limit(60),
+    ]);
+    const err=[tasks,apps,ints,recs,cons,comp,exp,cash,mem,act].find(r=>r.error); if(err) throw err.error;
+    applySettings(WS.settings);
+    let ev = isOwner()? sb.from('user_events').select('*').eq('workspace_id',WS.id).order('created_at',{ascending:false}).limit(300)
+                      : sb.from('user_events').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(100);
+    ev = await ev;
+    S = { settings:{ separationDate: WS.separation_date, weeklyRequirement: WS.weekly_requirement, name: WS.name },
+      tasks:tasks.data, apps:apps.data, interviews:ints.data, recruiters:recs.data, contacts:cons.data, compliance:comp.data, expenses:exp.data,
+      cash: cash.data || {savings:0,checking:0,severance:0,investments:0,unemployment:0,other:0},
+      members:mem.data, invites:inv.data||[], activity:act.data, events:ev.data||[], adminUsers:(S&&S.adminUsers)||null, sessions:(S&&S.sessions)||null, mailConfig:(S&&S.mailConfig)||null, changelog:(S&&S.changelog)||'' };
+  },
+  async saveSettings(patch){ // thresholds, lists, finance visibility, name
+    const settings = {...(WS?WS.settings:{}), ...patch};
+    if(MODE==='demo'){ applySettings(settings); S.settingsRaw=settings; demoSave(); return; }
+    const {error} = await sb.from('workspaces').update({settings}).eq('id',WS.id); if(error) throw error;
+    WS.settings=settings; applySettings(settings);
+  },
+  async rename(name){
+    if(MODE==='demo'){ S.settings.name=name; demoSave(); return; }
+    const {error} = await sb.from('workspaces').update({name}).eq('id',WS.id); if(error) throw error; WS.name=name; S.settings.name=name;
+  },
+  async admin(body){ // privileged actions via the admin-users edge function
+    if(MODE==='demo') throw new Error('Not available in the offline demo');
+    const {data,error} = await sb.functions.invoke('admin-users',{body:{...body, workspace_id:WS.id}});
+    if(error){ let msg=error.message; try{ const j=await error.context.json(); msg=j.error||msg; }catch(e){} throw new Error(msg); }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  },
+  async loadAdmin(){
+    if(MODE==='demo'){ S.adminUsers=S.members.map(m=>({...m,last_sign_in_at:null,must_change_password:false,email_confirmed:true})); S.sessions=[]; S.mailConfig={email_configured:false}; return; }
+    const [u,s] = await Promise.all([ db.admin({action:'users'}), sb.rpc('admin_sessions',{ws:WS.id}) ]);
+    S.adminUsers=u.users; S.mailConfig={email_configured:u.email_configured, fn_version:u.fn_version||null}; S.sessions=s.data||[]; S.sessionsAt=new Date().toISOString();
+  },
+  async importJson(obj){
+    const map={tasks:'tasks',applications:'apps',apps:'apps',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance',compliance_weeks:'compliance',expenses:'expenses'};
+    const strip=r=>{ const o={...r}; delete o.id; delete o.workspace_id; delete o.created_by; delete o.updated_by; delete o.created_at; delete o.updated_at; return o; };
+    const counts={};
+    for(const [k,coll] of Object.entries(map)){
+      const rows=Array.isArray(obj[k])?obj[k]:null; if(!rows||!rows.length) continue;
+      if(coll==='expenses' && !financeEditable()) continue;
+      const clean=rows.map(strip);
+      if(MODE==='demo'){ clean.forEach(r=>{ r.id=uid(); S[coll].push(r); }); }
+      else { const {error}=await sb.from(TABLE[coll]).insert(clean.map(r=>({...r,workspace_id:WS.id}))); if(error) throw error; }
+      counts[coll]=(counts[coll]||0)+clean.length;
+    }
+    if(obj.cash && financeEditable()){ const c={}; for(const k of ['savings','checking','severance','investments','unemployment','other']) if(obj.cash[k]!=null) c[k]=+obj.cash[k]; await db.updateCash(c); }
+    if(MODE==='demo') demoSave();
+    logEvent('import_json',counts); return counts;
+  },
+  async clearModules(){
+    if(MODE==='demo'){ for(const c of Object.keys(TABLE)) S[c]=[]; demoSave(); return; }
+    for(const t of Object.values(TABLE)){ const {error}=await sb.from(t).delete().eq('workspace_id',WS.id); if(error) throw error; }
+  },
+  async deleteWorkspace(){
+    if(MODE==='demo') throw new Error('Not available in the offline demo');
+    const {error}=await sb.from('workspaces').delete().eq('id',WS.id); if(error) throw error;
+  },
+  async insert(coll,row){
+    if(MODE==='demo'){ row.id=uid(); S[coll].push(row); demoSave(); return row; }
+    const {data,error} = await sb.from(TABLE[coll]).insert({...row, workspace_id:WS.id}).select().single(); if(error) throw error;
+    S[coll].push(data); return data;
+  },
+  async update(coll,id,patch){
+    const r=S[coll].find(x=>x.id===id); if(r) Object.assign(r,patch);
+    if(MODE==='demo'){ demoSave(); return; }
+    const {error} = await sb.from(TABLE[coll]).update(patch).eq('id',id); if(error) throw error;
+  },
+  async remove(coll,id){
+    S[coll]=S[coll].filter(x=>x.id!==id);
+    if(MODE==='demo'){ demoSave(); return; }
+    const {error} = await sb.from(TABLE[coll]).delete().eq('id',id); if(error) throw error;
+  },
+  async updateCash(patch){
+    Object.assign(S.cash,patch);
+    if(MODE==='demo'){ demoSave(); return; }
+    const {error} = await sb.from('cash_inputs').upsert({workspace_id:WS.id,...patch}); if(error) throw error;
+  },
+  async updateSettings(patch){
+    Object.assign(S.settings,patch);
+    if(MODE==='demo'){ demoSave(); return; }
+    const {error} = await sb.from('workspaces').update({separation_date:S.settings.separationDate, weekly_requirement:S.settings.weeklyRequirement}).eq('id',WS.id); if(error) throw error;
+    WS.separation_date=S.settings.separationDate; WS.weekly_requirement=S.settings.weeklyRequirement;
+  },
+  async loadSample(){
+    const sd=seed();
+    if(MODE==='demo'){ S=demoSeed(); demoSave(); return; }
+    logEvent('sample_load');
+    for(const coll of ['tasks','apps','interviews','recruiters','contacts','compliance','expenses']){
+      const rows = sd[coll].map(r=>({...r, workspace_id:WS.id}));
+      const {error} = await sb.from(TABLE[coll]).insert(rows); if(error) throw error;
+    }
+    await sb.from('cash_inputs').upsert({workspace_id:WS.id,...sd.cash});
+    await sb.from('workspaces').update({separation_date:sd.settings.separationDate, weekly_requirement:2}).eq('id',WS.id);
+    WS.separation_date=sd.settings.separationDate; WS.weekly_requirement=2;
+  },
+};
+function demoSeed(){ const s=seed(); for(const c of Object.keys(TABLE)) s[c].forEach(r=>r.id=uid()); s.settings.name='Offline demo'; s.members=[{user_id:'demo',email:'you@demo.local',display_name:'You (demo)',role:'owner',created_at:new Date().toISOString()}]; s.events=[]; s.settingsRaw={}; return s; }
+function logEvent(event, detail){ // usage / session log (fire and forget)
+  if(MODE==='demo'){ S.events=S.events||[]; S.events.unshift({user_email:'you@demo.local',event,detail:detail||{},created_at:new Date().toISOString()}); S.events=S.events.slice(0,300); demoSave(); return; }
+  if(!sb||!USER) return;
+  sb.from('user_events').insert({workspace_id:WS?WS.id:null,user_id:USER.id,user_email:USER.email,event,detail:detail||{},user_agent:navigator.userAgent.slice(0,200)}).then(()=>{});
+}
+function demoSave(){ try{ localStorage.setItem(DEMO_KEY, JSON.stringify(S)); }catch(e){} }
+function nextRef(coll){ const p=PREFIX[coll]; const nums=S[coll].map(r=>+String(r.ref||'').replace(/^\D+-?/,'')||0); return `${p}-${pad(Math.max(0,...nums)+1).padStart(3,'0')}`; }
+async function guarded(fn, okMsg){ try{ await fn(); if(okMsg) toast(okMsg); }catch(e){ console.error(e); toast('Not saved: '+(e.message||e)); await refresh(); } }
+
+/* ===================== Derived logic ===================== */
+function taskState(r){
+  const t=T();
+  if(r.status==='Complete') return {cls:'good',label:'Complete'};
+  if(r.due && r.due<t) return {cls:'crit',label:'Overdue'};
+  if(r.due && r.due===t) return {cls:'soon',label:'Due Today'};
+  if(r.due && diffDays(r.due,t)<=CFG.dueSoonDays) return {cls:'soon',label:'Due Soon'};
+  if(r.status==='In Progress') return {cls:'warn',label:'In Progress'};
+  if(r.status==='Blocked') return {cls:'crit',label:'Blocked'};
+  if(r.status==='Waiting') return {cls:'wait',label:'Waiting'};
+  return {cls:'idle',label:'Not Started'};
+}
+function ganttColor(r){ const t=T(); if(r.status==='Complete') return 'good'; if(r.due && r.due<t) return 'crit'; if(r.status==='In Progress') return 'warn'; return 'idle'; }
+function followState(next,closed){
+  const t=T();
+  if(closed) return {cls:'idle',label:'Closed'};
+  if(!next) return {cls:'idle',label:'No date'};
+  if(next<t) return {cls:'crit',label:'Overdue'};
+  if(next===t) return {cls:'soon',label:'Due today'};
+  if(diffDays(next,t)<=CFG.followWindowDays) return {cls:'warn',label:'This week'};
+  return {cls:'good',label:'Scheduled'};
+}
+function readiness(i){ return Math.round((i.research+i.star+i.technical+i.leadership+i.questions)/5); }
+function readyCls(s){ return s>=CFG.readyGreen?'good':s>=CFG.readyYellow?'warn':'crit'; }
+function compliance(r){
+  const total = (+r.apps||0)+(+r.networking||0)+(+r.recruiters||0)+(+r.training||0);
+  const req = S.settings.weeklyRequirement;
+  if(total>=req) return {cls:'good',label:'Compliant',total};
+  if(total>=Math.max(1,req-1)) return {cls:'warn',label:'At Risk',total};
+  return {cls:'crit',label:'Not Compliant',total};
+}
+function monthlyExpenses(){ return sum(S.expenses.map(e=>e.actual)); }
+function cashCalc(){
+  const c=S.cash;
+  const cash = (+c.savings)+(+c.checking)+(+c.severance)+(+c.investments);
+  const income = (+c.unemployment)+(+c.other);
+  const burn = monthlyExpenses()-income;
+  const months = burn>0 ? cash/burn : Infinity;
+  const exhaust = burn>0 ? addDays(T(), Math.round(months*30.44)) : null;
+  return {cash,income,burn,months,exhaust,cls: months>=CFG.runwayGreen?'good':months>=CFG.runwayYellow?'warn':'crit'};
+}
+function kpis(){
+  const t=T(), wk=addDays(t,7);
+  const open = S.tasks.filter(r=>r.status!=='Complete');
+  const done = S.tasks.filter(r=>r.status==='Complete').length;
+  const prog = S.tasks.length? Math.round(sum(S.tasks.map(r=>r.status==='Complete'?100:(+r.progress||0)))/S.tasks.length):0;
+  const cc = cashCalc();
+  return {
+    total:S.tasks.length, dueToday:open.filter(r=>r.due===t).length, dueWeek:open.filter(r=>r.due>t && r.due<=wk).length, overdue:open.filter(r=>r.due && r.due<t).length,
+    activeApps:S.apps.filter(r=>r.status!=='Closed').length, activeRec:S.recruiters.filter(r=>['Active','Interviewing','Offer'].includes(r.status)).length,
+    contacts:S.contacts.length, intSched:S.interviews.filter(r=>r.date>=t && r.outcome==='Pending').length,
+    offers:S.apps.filter(r=>r.stage==='Offer').length, completion:prog, done, runway:cc.months, runwayCls:cc.cls,
+    days:S.settings.separationDate? diffDays(t,S.settings.separationDate):0,
+  };
+}
+
+/* ===================== Generic editable table ===================== */
+function tableHTML(id, rows, cols, opts={}){
+  const {rowCls,foot,addLabel,filter} = opts;
+  const head = cols.map(c=>`<th style="${c.w?`min-width:${c.w}px`:''}">${esc(c.label)}</th>`).join('');
+  const body = rows.map(r=>{
+    const cls = rowCls? rowCls(r):'';
+    const cells = cols.map(c=>{
+      const v = r[c.k];
+      if(c.type==='ro') return `<td class="${c.cls||''}">${c.fmt? c.fmt(r):esc(v)}</td>`;
+      if(c.type==='select') return `<td><select data-id="${r.id}" data-k="${c.k}">${c.opts.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+      if(c.type==='number') return `<td><input type="number" data-id="${r.id}" data-k="${c.k}" value="${v??''}" ${c.min!=null?`min="${c.min}"`:''} ${c.max!=null?`max="${c.max}"`:''}></td>`;
+      if(c.type==='date') return `<td><input type="date" data-id="${r.id}" data-k="${c.k}" value="${v?String(v).slice(0,10):''}"></td>`;
+      return `<td><input type="text" data-id="${r.id}" data-k="${c.k}" value="${esc(v)}" style="${c.w?`min-width:${c.w}px`:''}"></td>`;
+    }).join('');
+    return `<tr class="${cls}">${cells}<td>${canEdit()?`<button class="del" data-del="${r.id}" title="Delete row">✕</button>`:''}</td></tr>`;
+  }).join('');
+  return `<div class="tblhead"><span class="cnt">${rows.length} row${rows.length===1?'':'s'}${filter?' (filtered)':''}</span>${canEdit()?`<button class="btn" data-add="${id}">+ ${addLabel||'Add row'}</button>`:'<span class="cnt">read-only</span>'}</div>
+  <div class="tblwrap"><table class="tbl" data-tbl="${id}"><thead><tr>${head}<th></th></tr></thead><tbody>${body||`<tr><td colspan="${cols.length+1}" class="empty">No rows match the current filters.</td></tr>`}</tbody>${foot?`<tfoot>${foot}</tfoot>`:''}</table></div>`;
+}
+function bindTable(container, coll, onNew){
+  container.querySelectorAll('[data-tbl]').forEach(tb=>{
+    tb.addEventListener('change', e=>{
+      const el=e.target; if(!el.dataset.id || !canEdit()) return;
+      const v = el.type==='number'? (+el.value||0) : el.value;
+      guarded(()=>db.update(coll, el.dataset.id, {[el.dataset.k]: v}), null); render(true);
+    });
+    tb.addEventListener('click', e=>{
+      const b=e.target.closest('[data-del]'); if(!b||!canEdit()) return;
+      guarded(async()=>{ await db.remove(coll,b.dataset.del); render(); }, 'Row deleted');
+    });
+  });
+  container.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.insert(coll,onNew()); render(); },'Row added')));
+}
+
+/* ===================== Slicers ===================== */
+const SL = {};
+function slicerHTML(view, defs, rows){
+  SL[view] = SL[view]||{};
+  return `<div class="slicers">${defs.map(d=>{
+    const vals = d.opts || [...new Set(rows.map(d.get||(r=>r[d.k])))].filter(Boolean).sort();
+    const sel = SL[view][d.k]||new Set();
+    return `<div class="slicer"><span class="sl">${esc(d.label)}</span><div class="opts">${vals.map(v=>`<button data-sl="${view}" data-k="${d.k}" data-v="${esc(v)}" class="${sel.has(v)?'on':''}">${esc(v)}</button>`).join('')}${sel.size?`<button data-slclear="${view}" data-k="${d.k}" style="border-style:dashed">clear</button>`:''}</div></div>`;
+  }).join('')}</div>`;
+}
+function applySlicers(view, defs, rows){
+  const s=SL[view]||{}; let filtered=false;
+  const out = rows.filter(r=>defs.every(d=>{ const sel=s[d.k]; if(!sel||!sel.size) return true; filtered=true; return sel.has((d.get||(x=>x[d.k]))(r)); }));
+  return {rows:out, filtered};
+}
+document.addEventListener('click', e=>{
+  const b=e.target.closest('[data-sl]');
+  if(b){ const s=SL[b.dataset.sl][b.dataset.k]=SL[b.dataset.sl][b.dataset.k]||new Set(); s.has(b.dataset.v)?s.delete(b.dataset.v):s.add(b.dataset.v); render(); return; }
+  const c=e.target.closest('[data-slclear]');
+  if(c){ SL[c.dataset.slclear][c.dataset.k]=new Set(); render(); }
+});
+
+/* ===================== Plotly helpers ===================== */
+function plotBase(){
+  return { paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{family:cssVar('--sans'),color:cssVar('--ink-2'),size:12},
+    margin:{l:40,r:16,t:8,b:36}, xaxis:{gridcolor:cssVar('--line-2'),zeroline:false,linecolor:cssVar('--line')}, yaxis:{gridcolor:cssVar('--line-2'),zeroline:false},
+    hoverlabel:{bgcolor:cssVar('--surface'),bordercolor:cssVar('--line'),font:{color:cssVar('--ink')}}, showlegend:false };
+}
+const PCFG={displayModeBar:false,responsive:true};
+function gauge(el, value, max, color, suffix, steps, display){
+  el.style.position='relative';
+  const shown = display!=null ? display : (Math.round(value*10)/10)+suffix;
+  Plotly.newPlot(el,[{type:'indicator',mode:'gauge',value:Math.min(value,max),
+    gauge:{axis:{range:[0,max],tickwidth:1,tickcolor:cssVar('--ink-3'),tickfont:{size:10,color:cssVar('--ink-3')},nticks:5,ticks:'outside'},bar:{color,thickness:.32},bgcolor:cssVar('--line-2'),borderwidth:0,steps:steps||[]}}],
+    {...plotBase(),margin:{l:24,r:24,t:14,b:6},height:170},PCFG);
+  const n=document.createElement('div'); n.style.cssText='position:absolute;left:0;right:0;bottom:12px;text-align:center;font-family:var(--mono);font-size:28px;font-weight:600;color:var(--ink);pointer-events:none';
+  n.textContent=shown; el.appendChild(n);
+}
+
+/* ===================== Views ===================== */
+const VIEWS = [
+  {zone:'Command center'},
+  {id:'exec',n:1,title:'Executive Dashboard',sub:'Home — KPI scorecards, gauges, trends and weekly workload'},
+  {id:'daily',n:2,title:'Daily Action Dashboard',sub:'Auto-generated priority list for today'},
+  {zone:'Execution'},
+  {id:'tasks',n:3,title:'Master Task Tracker',sub:'Every task with priority, status, owner and progress',group:'tasks'},
+  {id:'gantt',n:4,title:'Dynamic Gantt Chart',sub:'Timeline rebuilds from the task tracker automatically',group:'tasks'},
+  {zone:'Pipeline'},
+  {id:'apps',n:5,title:'Job Applications CRM',sub:'Company, role, source, stage, next action',group:'pipeline'},
+  {id:'analytics',n:6,title:'Application Analytics',sub:'Pivots by source, stage, company and month',group:'pipeline'},
+  {id:'interviews',n:7,title:'Interview Tracker',sub:'Scheduled and completed interviews',group:'pipeline'},
+  {id:'ready',n:8,title:'Interview Readiness Scorecard',sub:'Five weighted categories, 20% each',group:'pipeline'},
+  {zone:'Relationships'},
+  {id:'recruiters',n:9,title:'Recruiter CRM',sub:'Agency and internal recruiters with follow-up cadence',group:'relationships'},
+  {id:'network',n:10,title:'Networking CRM',sub:'People, referral potential and follow-ups',group:'relationships'},
+  {zone:'Compliance & money'},
+  {id:'compliance',n:11,title:'Unemployment Compliance Tracker',sub:'Weekly work-search activity vs. requirement',group:'compliance'},
+  {id:'budget',n:12,title:'Expense & Budget Dashboard',sub:'Fixed and variable spending vs. plan',finance:true},
+  {id:'runway',n:13,title:'Cash Runway Calculator',sub:'Burn rate, months remaining, exhaustion date',finance:true},
+  {zone:'Planning'},
+  {id:'weekly',n:14,title:'Weekly Planning Dashboard',sub:'Everything that needs attention in the next 7 days'},
+  {zone:'Administration'},
+  {id:'admin',n:15,title:'Settings & Administration',sub:'Single source of control — users, sessions, analytics, security audit, export/import, activity log, settings'},
+];
+function navBadges(){
+  const k=kpis(), t=T();
+  return { daily:k.dueToday+k.overdue, tasks:k.total, apps:k.activeApps, interviews:k.intSched,
+    recruiters:S.recruiters.filter(r=>r.status!=='Closed'&&r.next&&r.next<=t).length,
+    network:S.contacts.filter(r=>r.next&&r.next<=t).length, admin:(S.members||[]).length };
+}
+function renderNav(){
+  const b=navBadges();
+  document.getElementById('nav').innerHTML = VIEWS.filter(v=>v.zone||((!v.finance||financeVisible()) && moduleOk(v.group))).map(v=> v.zone? `<div class="zone">${v.zone}</div>` :
+    `<button data-view="${v.id}" class="${v.id===current?'active':''}"><span class="n">${pad(v.n)}</span>${esc(v.title)}${b[v.id]?`<span class="badge">${b[v.id]}</span>`:''}</button>`).join('');
+}
+document.getElementById('nav').addEventListener('click',e=>{ const b=e.target.closest('[data-view]'); if(!b) return; current=b.dataset.view; window.scrollTo(0,0); logEvent('view',{module:current}); render(); });
+
+const R = {};
+
+/* ---- 1. Executive ---- */
+R.exec = el => {
+  const k=kpis(), t=T();
+  const card=(l,v,cls,s)=>`<div class="kpi ${cls}"><div class="l">${l}</div><div class="v">${v}</div><div class="s"><span class="dot ${cls==='info'?'':cls}"></span>${s}</div></div>`;
+  const runwayTxt = financeVisible()? (isFinite(k.runway)? k.runway.toFixed(1)+' mo' : '∞') : '—';
+  el.innerHTML = `
+  <div class="kpis" style="margin-bottom:16px">
+    ${card('Total tasks',k.total,'info',`${k.done} complete`)}
+    ${card('Due today',k.dueToday,k.dueToday>2?'crit':k.dueToday?'warn':'good',k.dueToday?'needs action':'clear')}
+    ${card('Due this week',k.dueWeek,k.dueWeek>5?'warn':'good','next 7 days')}
+    ${card('Overdue',k.overdue,k.overdue?'crit':'good',k.overdue?'past due date':'none overdue')}
+    ${card('Active applications',k.activeApps,'info',`${S.apps.length} total`)}
+    ${card('Active recruiters',k.activeRec,'info',`${S.recruiters.length} in CRM`)}
+    ${card('Networking contacts',k.contacts,'info',`${S.contacts.filter(c=>c.status==='Referral Received').length} referrals received`)}
+    ${card('Interviews scheduled',k.intSched,k.intSched?'good':'warn',k.intSched?'upcoming':'none booked')}
+    ${card('Offers received',k.offers,k.offers?'good':'info',k.offers?'decision pending':'none yet')}
+    ${card('Completion',k.completion+'%',k.completion>=75?'good':k.completion>=40?'warn':'crit','weighted task progress')}
+    ${card('Cash runway',runwayTxt,financeVisible()?k.runwayCls:'info',financeVisible()?(k.runwayCls==='good'?`${CFG.runwayGreen}+ months`:k.runwayCls==='warn'?`${CFG.runwayYellow}–${CFG.runwayGreen} months`:`under ${CFG.runwayYellow} months`):'owner only')}
+    ${card('Days since separation',k.days,k.days>90?'crit':k.days>45?'warn':'good',fmtD(S.settings.separationDate)+' separation')}
+  </div>
+  <div class="grid g12">
+    <div class="card span4"><h3>Task completion</h3><div id="g1" class="chart" style="min-height:170px"></div></div>
+    ${financeVisible()?`<div class="card span4"><h3>Cash runway <span class="hint">months</span></h3><div id="g2" class="chart" style="min-height:170px"></div></div>`:`<div class="card span4"><h3>Team activity</h3><ul class="alist feed" style="font-size:12.5px">${(S.activity||[]).slice(0,4).map(a=>`<li><span class="who">${esc((a.user_email||'').split('@')[0])}</span><span>${esc(a.action)} ${esc(a.table_name.replace('_',' '))} · ${esc(a.summary||'')}</span><span class="when">${ago(a.created_at)}</span></li>`).join('')||'<li class="empty">No activity yet</li>'}</ul></div>`}
+    <div class="card span4"><h3>Avg interview readiness</h3><div id="g3" class="chart" style="min-height:170px"></div></div>
+    <div class="card span8"><h3>Application trend <span class="hint">applications per week, cumulative</span></h3><div id="c1" class="chart"></div></div>
+    <div class="card span4"><h3>Pipeline by stage</h3><div id="c2" class="chart"></div></div>
+    <div class="card span6"><h3>Weekly workload <span class="hint">open tasks due, next 7 days</span></h3><div id="c3" class="chart"></div></div>
+    <div class="card span6"><h3>Traffic lights</h3><ul class="alist" id="lights"></ul></div>
+  </div>`;
+  const good=cssVar('--good'),warn=cssVar('--warn'),crit=cssVar('--crit'),acc=cssVar('--accent');
+  const colorFor=c=>({good,warn,crit,info:acc,idle:cssVar('--idle'),soon:cssVar('--soon'),wait:cssVar('--wait')}[c]);
+  gauge(el.querySelector('#g1'),k.completion,100,colorFor(k.completion>=75?'good':k.completion>=40?'warn':'crit'),'%');
+  if(financeVisible()) gauge(el.querySelector('#g2'),isFinite(k.runway)?k.runway:24,24,colorFor(k.runwayCls),'',[{range:[0,6],color:cssVar('--crit-soft')},{range:[6,12],color:cssVar('--warn-soft')},{range:[12,24],color:cssVar('--good-soft')}],isFinite(k.runway)?k.runway.toFixed(1)+' mo':'∞');
+  const avgR = S.interviews.length? Math.round(sum(S.interviews.map(readiness))/S.interviews.length):0;
+  gauge(el.querySelector('#g3'),avgR,100,colorFor(readyCls(avgR)),'%',[{range:[0,70],color:cssVar('--crit-soft')},{range:[70,85],color:cssVar('--warn-soft')},{range:[85,100],color:cssVar('--good-soft')}]);
+  const weeks=[]; for(let i=7;i>=0;i--) weeks.push(weekEnding(addDays(t,-7*i)));
+  const perWeek = weeks.map(w=>S.apps.filter(a=>a.applied && weekEnding(a.applied)===w).length);
+  let cum=0; const cumul=perWeek.map(v=>cum+=v);
+  Plotly.newPlot(el.querySelector('#c1'),[
+    {type:'bar',x:weeks.map(fmtD),y:perWeek,name:'Applications',marker:{color:acc},hovertemplate:'Week of %{x}<br>%{y} applications<extra></extra>'},
+    {type:'scatter',mode:'lines+markers',x:weeks.map(fmtD),y:cumul,name:'Cumulative',line:{color:cssVar('--ink-2'),width:2},marker:{size:7},hovertemplate:'Cumulative %{y}<extra></extra>'}],
+    {...plotBase(),showlegend:true,legend:{orientation:'h',y:1.15},height:240,yaxis:{...plotBase().yaxis,dtick:1}},PCFG);
+  const stages=L.stage.map(s=>S.apps.filter(a=>a.stage===s).length);
+  Plotly.newPlot(el.querySelector('#c2'),[{type:'bar',orientation:'h',y:L.stage.slice().reverse(),x:stages.slice().reverse(),marker:{color:L.stage.slice().reverse().map(s=>s==='Offer'?good:s==='Rejected'?cssVar('--idle'):acc)},hovertemplate:'%{y}: %{x}<extra></extra>'}],
+    {...plotBase(),margin:{l:110,r:16,t:4,b:30},height:240,xaxis:{...plotBase().xaxis,dtick:1}},PCFG);
+  const days=[...Array(7)].map((_,i)=>addDays(t,i));
+  const counts=days.map(d=>S.tasks.filter(r=>r.status!=='Complete'&&r.due===d).length);
+  Plotly.newPlot(el.querySelector('#c3'),[{type:'bar',x:['Overdue',...days.map(d=>parse(d).toLocaleDateString(undefined,{weekday:'short',day:'numeric'}))],y:[k.overdue,...counts],
+    marker:{color:[crit,...counts.map((c,i)=>i===0?cssVar('--soon'):acc)]},hovertemplate:'%{x}: %{y} tasks<extra></extra>'}],{...plotBase(),height:220,yaxis:{...plotBase().yaxis,dtick:1}},PCFG);
+  const cc=cashCalc();
+  const lights=[
+    ['Overdue tasks',k.overdue?'crit':'good',k.overdue?`${k.overdue} overdue`:'On schedule'],
+    ['Recruiter follow-ups',S.recruiters.some(r=>r.status!=='Closed'&&r.next&&r.next<t)?'crit':S.recruiters.some(r=>r.next===t)?'warn':'good',`${S.recruiters.filter(r=>r.status!=='Closed'&&r.next&&r.next<=t).length} due or overdue`],
+    ['Networking follow-ups',S.contacts.some(r=>r.next&&r.next<t)?'crit':S.contacts.some(r=>r.next===t)?'warn':'good',`${S.contacts.filter(r=>r.next&&r.next<=t).length} due or overdue`],
+    ['Interview readiness',readyCls(avgR),`${avgR}% average`],
+    ['Unemployment compliance',(()=>{const c=S.compliance.map(compliance);return c.some(x=>x.cls==='crit')?'crit':c.some(x=>x.cls==='warn')?'warn':'good'})(),`${S.compliance.filter(r=>compliance(r).cls==='good').length}/${S.compliance.length} weeks compliant`],
+  ];
+  if(financeVisible()){
+    lights.push(['Budget',sum(S.expenses.map(e=>e.actual))>sum(S.expenses.map(e=>e.budget))?'warn':'good',`${fmtMoney(sum(S.expenses.map(e=>e.actual)))} vs ${fmtMoney(sum(S.expenses.map(e=>e.budget)))} plan`]);
+    lights.push(['Cash runway',cc.cls,isFinite(cc.months)?`${cc.months.toFixed(1)} months · exhausts ${fmtDY(cc.exhaust)}`:'Income covers expenses']);
+  }
+  el.querySelector('#lights').innerHTML=lights.map(([n,c,m])=>`<li><span class="dot ${c}"></span><span><span class="t">${n}</span><div class="m">${m}</div></span><span class="pill ${c}">${c==='good'?'OK':c==='warn'?'Watch':'Critical'}</span></li>`).join('');
+};
+
+/* ---- 2. Daily ---- */
+function actionItems(){
+  const t=T(), wk=addDays(t,7);
+  const open=S.tasks.filter(r=>r.status!=='Complete');
+  const li=(cls,n,title,meta,d)=>({cls,n,title,meta,d});
+  return [
+    {n:1,label:'Tasks due today (and overdue)',items:open.filter(r=>r.due&&r.due<=t).sort((a,b)=>a.due.localeCompare(b.due)).map(r=>li('p1',1,r.task,`${r.category} · ${r.priority} · ${r.progress||0}%`,r.due<t?`Overdue ${-diffDays(r.due,t)}d`:'Today'))},
+    {n:2,label:'Tasks due within 7 days',items:open.filter(r=>r.due>t&&r.due<=wk).sort((a,b)=>a.due.localeCompare(b.due)).map(r=>li('p2',2,r.task,`${r.category} · ${r.priority}`,fmtD(r.due)))},
+    {n:3,label:'Recruiter follow-ups',items:S.recruiters.filter(r=>r.status!=='Closed'&&r.next&&r.next<=wk).sort((a,b)=>a.next.localeCompare(b.next)).map(r=>li('p3',3,`Follow up with ${r.name}`,`${r.agency||''} · ${r.status}${r.notes?' · '+r.notes:''}`,r.next<t?`Overdue ${-diffDays(r.next,t)}d`:r.next===t?'Today':fmtD(r.next)))},
+    {n:4,label:'Networking follow-ups',items:S.contacts.filter(r=>r.next&&r.next<=wk).sort((a,b)=>a.next.localeCompare(b.next)).map(r=>li('p4',4,`${r.method||'Contact'} ${r.person}`,`${r.title||''}, ${r.company||''} · ${r.status}`,r.next<t?`Overdue ${-diffDays(r.next,t)}d`:r.next===t?'Today':fmtD(r.next)))},
+    {n:5,label:'Interview preparation',items:S.interviews.filter(r=>r.outcome==='Pending'&&r.date>=t).sort((a,b)=>a.date.localeCompare(b.date)).map(r=>{const s=readiness(r);return li('p5',5,`Prep: ${r.company} — ${r.stage} (${r.type})`,`Readiness ${s}% · weakest: ${['research','star','technical','leadership','questions'].reduce((a,b)=>r[a]<=r[b]?a:b)}`,`${diffDays(r.date,t)===0?'Today':'in '+diffDays(r.date,t)+'d'}`)})},
+  ];
+}
+function actionListHTML(groups){
+  return groups.map(g=>`<div class="card span6"><h3><span class="pri p${g.n}">${g.n}</span> ${g.label}<span class="hint">${g.items.length}</span></h3>${g.items.length?`<ul class="alist">${g.items.map(i=>`<li><span class="pri ${i.cls}">P${i.n}</span><span><span class="t">${esc(i.title)}</span><div class="m">${esc(i.meta)}</div></span><span class="d">${esc(i.d)}</span></li>`).join('')}</ul>`:'<div class="empty">Nothing in this bucket.</div>'}</div>`).join('');
+}
+R.daily = el => {
+  const g=actionItems(); const total=sum(g.map(x=>x.items.length));
+  el.innerHTML=`<div class="grid g12"><div class="card span12" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><b>${total} actions</b> on today's list · ${parse(T()).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div><span class="sample">Generated from Tasks, Recruiter CRM, Networking CRM and Interview Tracker — edit those and this list rebuilds.</span></div>${actionListHTML(g)}</div>`;
+};
+
+/* ---- 3. Tasks ---- */
+R.tasks = el => {
+  const defs=[{k:'status',label:'Status',opts:L.status},{k:'priority',label:'Priority',opts:L.priority},{k:'category',label:'Category'}];
+  const {rows,filtered}=applySlicers('tasks',defs,S.tasks);
+  const cols=[
+    {k:'ref',label:'Task ID',type:'ro',cls:'id'},{k:'category',label:'Category',type:'select',opts:L.category},{k:'task',label:'Task',type:'text',w:220},{k:'subtask',label:'Subtask',type:'text',w:200},
+    {k:'start',label:'Start',type:'date'},{k:'due',label:'Due',type:'date'},{k:'priority',label:'Priority',type:'select',opts:L.priority},{k:'status',label:'Status',type:'select',opts:L.status},
+    {k:'owner',label:'Owner',type:'text',w:80},{k:'notes',label:'Notes',type:'text',w:200},{k:'progress',label:'Progress %',type:'number',min:0,max:100},
+    {k:'_',label:'Health',type:'ro',fmt:r=>{const s=taskState(r);return `<span class="pill ${s.cls}">${s.label}</span>`}}];
+  el.innerHTML=slicerHTML('tasks',defs,S.tasks)+`<div class="card">${tableHTML('tasks',rows,cols,{rowCls:r=>'st-'+taskState(r).cls,addLabel:'Add task',filter:filtered})}
+  <div class="legend"><span><i style="background:var(--good)"></i>Complete</span><span><i style="background:var(--warn)"></i>In Progress</span><span><i style="background:var(--crit)"></i>Overdue / Blocked</span><span><i style="background:var(--soon)"></i>Due Today / Soon (≤3 days)</span><span><i style="background:var(--wait)"></i>Waiting</span><span><i style="background:var(--idle)"></i>Not Started</span></div></div>`;
+  bindTable(el,'tasks',()=>({ref:nextRef('tasks'),category:'Applications',task:'New task',subtask:'',start:T(),due:addDays(T(),7),priority:'Medium',status:'Not Started',owner:'Me',notes:'',progress:0}));
+};
+
+/* ---- 4. Gantt ---- */
+R.gantt = el => {
+  el.innerHTML=`<div class="card"><h3>Timeline <span class="hint">bars span start → due; dashed line is today; bar fill shows progress</span></h3><div id="gantt" class="chart tall"></div>
+  <div class="legend"><span><i style="background:var(--good)"></i>Complete</span><span><i style="background:var(--warn)"></i>In Progress</span><span><i style="background:var(--crit)"></i>Overdue</span><span><i style="background:var(--idle)"></i>Not Started</span></div></div>`;
+  const rows=S.tasks.filter(r=>r.start&&r.due).slice().sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  if(!rows.length){ el.querySelector('#gantt').innerHTML='<div class="empty">Add tasks with start and due dates to see the timeline.</div>'; return; }
+  const col={good:cssVar('--good'),warn:cssVar('--warn'),crit:cssVar('--crit'),idle:cssVar('--idle')};
+  const y=rows.map(r=>`${r.ref} · ${r.task}`);
+  const dur=r=>Math.max(1,diffDays(r.due,r.start)+1)*DAY;
+  const base=rows.map(r=>r.start);
+  const full={type:'bar',orientation:'h',y,x:rows.map(dur),base,marker:{color:rows.map(r=>col[ganttColor(r)]),opacity:.35},hovertemplate:rows.map(r=>`<b>${esc(r.task)}</b><br>${fmtD(r.start)} → ${fmtD(r.due)}<br>${r.status} · ${r.progress||0}%<extra></extra>`),width:.55};
+  const prog={type:'bar',orientation:'h',y,x:rows.map(r=>dur(r)*(r.status==='Complete'?1:(+r.progress||0)/100)),base,marker:{color:rows.map(r=>col[ganttColor(r)])},hoverinfo:'skip',width:.55};
+  const t=T();
+  Plotly.newPlot(el.querySelector('#gantt'),[full,prog],{...plotBase(),barmode:'overlay',height:Math.max(300,60+rows.length*44),margin:{l:280,r:20,t:10,b:40},
+    xaxis:{type:'date',gridcolor:cssVar('--line-2'),range:[addDays(t,-14),addDays(t,21)],tickformat:'%b %d'},yaxis:{autorange:'reversed',automargin:true},
+    shapes:[{type:'line',x0:t,x1:t,y0:0,y1:1,yref:'paper',line:{color:cssVar('--crit'),width:1.5,dash:'dash'}}],
+    annotations:[{x:t,y:1.02,yref:'paper',text:'Today',showarrow:false,font:{color:cssVar('--crit'),size:11}}]},PCFG);
+};
+
+/* ---- 5. Applications ---- */
+R.apps = el => {
+  const defs=[{k:'source',label:'Job Source',opts:L.source},{k:'stage',label:'Stage',opts:L.stage},{k:'status',label:'Application Status',opts:L.appStatus},{k:'company',label:'Company'},{k:'month',label:'Month',get:r=>monthKey(r.applied)},{k:'quarter',label:'Quarter',get:r=>quarterKey(r.applied)}];
+  const {rows,filtered}=applySlicers('apps',defs,S.apps);
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'company',label:'Company',type:'text',w:170},{k:'position',label:'Position',type:'text',w:200},{k:'salary',label:'Salary Range',type:'text',w:110},{k:'location',label:'Location',type:'text',w:150},
+    {k:'source',label:'Job Source',type:'select',opts:L.source},{k:'applied',label:'Date Applied',type:'date'},{k:'stage',label:'Current Stage',type:'select',opts:L.stage},{k:'recruiter',label:'Recruiter',type:'text',w:120},{k:'next',label:'Next Action',type:'text',w:180},{k:'status',label:'Status',type:'select',opts:L.appStatus},{k:'notes',label:'Notes',type:'text',w:180},
+    {k:'_',label:'Age',type:'ro',cls:'num',fmt:r=>r.applied?diffDays(T(),r.applied)+'d':'—'}];
+  const cls=r=>r.stage==='Offer'?'st-good':r.stage==='Rejected'||r.status==='Closed'?'st-idle':r.status==='Waiting'?'st-wait':['Panel Interview','Final Interview','Hiring Manager'].includes(r.stage)?'st-warn':'st-info';
+  el.innerHTML=slicerHTML('apps',defs,S.apps)+`<div class="card">${tableHTML('apps',rows,cols,{rowCls:cls,addLabel:'Add application',filter:filtered})}</div>`;
+  bindTable(el,'apps',()=>({ref:nextRef('apps'),company:'',position:'',salary:'',location:'',source:'LinkedIn',applied:T(),stage:'Applied',recruiter:'',next:'',status:'Active',notes:''}));
+};
+
+/* ---- 6. Analytics ---- */
+R.analytics = el => {
+  const defs=[{k:'month',label:'Month',get:r=>monthKey(r.applied)},{k:'quarter',label:'Quarter',get:r=>quarterKey(r.applied)},{k:'status',label:'Application Status',opts:L.appStatus}];
+  const {rows}=applySlicers('analytics',defs,S.apps);
+  const pivot=(key,order)=>{ const m={}; rows.forEach(r=>{const k=key(r)||'(blank)'; m[k]=(m[k]||0)+1;}); const keys=order?order.filter(k=>m[k]!=null):Object.keys(m).sort(); return keys.map(k=>[k,m[k]]); };
+  const pv=(title,data,fmtK)=>`<div class="card span6"><h3>${title}</h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>${title.replace('Applications by ','')}</th><th style="text-align:right">Count</th><th style="text-align:right">Share</th></tr></thead><tbody>${data.map(([k,v])=>`<tr><td>${esc(fmtK?fmtK(k):k)}</td><td class="num">${v}</td><td class="num">${rows.length?Math.round(v/rows.length*100):0}%</td></tr>`).join('')||'<tr><td colspan="3" class="empty">No data</td></tr>'}</tbody><tfoot><tr><td>Total</td><td class="num">${rows.length}</td><td class="num">100%</td></tr></tfoot></table></div><div class="chart" id="pc-${title.replace(/\W/g,'')}" style="min-height:200px"></div></div>`;
+  const bySource=pivot(r=>r.source,L.source), byStage=pivot(r=>r.stage,L.stage), byCo=pivot(r=>r.company), byMonth=pivot(r=>monthKey(r.applied));
+  el.innerHTML=slicerHTML('analytics',defs,S.apps)+`<div class="grid g12">${pv('Applications by Source',bySource)}${pv('Applications by Stage',byStage)}${pv('Applications by Company',byCo)}${pv('Applications by Month',byMonth,k=>k==='(blank)'?k:monthLabel(k))}</div>`;
+  const acc=cssVar('--accent');
+  const bar=(id,data,horizontal,fmtK)=>Plotly.newPlot(el.querySelector('#pc-'+id),[{type:'bar',orientation:horizontal?'h':'v',[horizontal?'y':'x']:data.map(d=>fmtK?fmtK(d[0]):d[0]),[horizontal?'x':'y']:data.map(d=>d[1]),marker:{color:acc},hovertemplate:'%{'+(horizontal?'y':'x')+'}: %{'+(horizontal?'x':'y')+'}<extra></extra>'}],{...plotBase(),height:200,margin:{l:horizontal?120:40,r:10,t:6,b:34},[horizontal?'xaxis':'yaxis']:{...plotBase().yaxis,dtick:1}},PCFG);
+  bar('ApplicationsbySource',bySource,true); bar('ApplicationsbyStage',byStage,true); bar('ApplicationsbyCompany',byCo,true); bar('ApplicationsbyMonth',byMonth,false,k=>k==='(blank)'?k:monthLabel(k));
+};
+
+/* ---- 7. Interviews ---- */
+R.interviews = el => {
+  const defs=[{k:'stage',label:'Interview Stage',opts:L.intStage},{k:'outcome',label:'Outcome',opts:L.outcome},{k:'company',label:'Company'}];
+  const {rows,filtered}=applySlicers('interviews',defs,S.interviews);
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'company',label:'Company',type:'text',w:170},{k:'position',label:'Position',type:'text',w:190},{k:'date',label:'Interview Date',type:'date'},{k:'stage',label:'Stage',type:'select',opts:L.intStage},{k:'type',label:'Interview Type',type:'select',opts:L.intType},{k:'interviewer',label:'Interviewer',type:'text',w:180},{k:'outcome',label:'Outcome',type:'select',opts:L.outcome},{k:'notes',label:'Notes',type:'text',w:200},
+    {k:'_',label:'Readiness',type:'ro',fmt:r=>{const s=readiness(r);return `<span class="pill ${readyCls(s)}">${s}%</span>`}},{k:'__',label:'When',type:'ro',cls:'num',fmt:r=>{if(!r.date) return '—';const d=diffDays(r.date,T());return d===0?'Today':d>0?`in ${d}d`:`${-d}d ago`}}];
+  const cls=r=>r.outcome==='Offer'||r.outcome==='Advanced'?'st-good':r.outcome==='Rejected'?'st-idle':r.date<T()?'st-warn':'st-info';
+  el.innerHTML=slicerHTML('interviews',defs,S.interviews)+`<div class="card">${tableHTML('interviews',rows,cols,{rowCls:cls,addLabel:'Add interview',filter:filtered})}<div class="note">Readiness scores are edited on the Interview Readiness Scorecard.</div></div>`;
+  bindTable(el,'interviews',()=>({ref:nextRef('interviews'),company:'',position:'',date:addDays(T(),3),stage:'Recruiter Screen',type:'Video',interviewer:'',outcome:'Pending',notes:'',research:50,star:50,technical:50,leadership:50,questions:50}));
+};
+
+/* ---- 8. Readiness ---- */
+R.ready = el => {
+  const cats=[['research','Research'],['star','STAR Stories'],['technical','Technical Preparation'],['leadership','Leadership Examples'],['questions','Questions Prepared']];
+  el.innerHTML=`<div class="grid g12">${S.interviews.map(i=>{const s=readiness(i);const c=readyCls(s);return `<div class="card span6"><h3>${esc(i.company)} <span class="hint">${esc(i.stage)} · ${fmtD(i.date)} · ${esc(i.outcome)}</span></h3>
+    <div class="bigstat"><span class="v" style="color:var(--${c})">${s}%</span><span class="u">overall readiness</span><span class="pill ${c}" style="margin-left:auto">${c==='good'?'Ready':c==='warn'?'Needs work':'Not ready'}</span></div>
+    <div class="bar" style="margin-bottom:10px"><i style="width:${s}%;background:var(--${c})"></i></div>
+    ${cats.map(([k,l])=>`<div class="score-row"><label for="${i.id}-${k}">${l} <span style="color:var(--ink-3)">20%</span></label><input id="${i.id}-${k}" type="range" min="0" max="100" step="5" value="${i[k]}" data-id="${i.id}" data-k="${k}" ${canEdit()?'':'disabled'}><span class="sv">${i[k]}</span></div>`).join('')}
+    <div class="note">Weighted score = Σ(category × 20%). Green ≥ ${CFG.readyGreen}%, yellow ${CFG.readyYellow}–${CFG.readyGreen-1}%, red below ${CFG.readyYellow}%.</div></div>`}).join('')||'<div class="card span12 empty">Add an interview first.</div>'}</div>`;
+  el.querySelectorAll('input[type=range]').forEach(r=>{
+    r.addEventListener('input',()=>{ r.nextElementSibling.textContent=r.value; });
+    r.addEventListener('change',()=>{ guarded(()=>db.update('interviews',r.dataset.id,{[r.dataset.k]:+r.value})); render(true); });
+  });
+};
+
+/* ---- 9. Recruiters ---- */
+R.recruiters = el => {
+  const t=T(), wk=addDays(t,7);
+  const open=S.recruiters.filter(r=>r.status!=='Closed');
+  const m={active:S.recruiters.filter(r=>['Active','Interviewing','Offer'].includes(r.status)).length,today:open.filter(r=>r.next===t).length,week:open.filter(r=>r.next>t&&r.next<=wk).length,over:open.filter(r=>r.next&&r.next<t).length};
+  const defs=[{k:'status',label:'Recruiter Status',opts:L.recStatus},{k:'agency',label:'Agency'},{k:'company',label:'Company'}];
+  const {rows,filtered}=applySlicers('recruiters',defs,S.recruiters);
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'name',label:'Recruiter',type:'text',w:140},{k:'agency',label:'Agency',type:'text',w:140},{k:'company',label:'Company',type:'text',w:160},{k:'phone',label:'Phone',type:'text',w:110},{k:'email',label:'Email',type:'text',w:170},{k:'linkedin',label:'LinkedIn',type:'text',w:170},{k:'last',label:'Last Contact',type:'date'},{k:'next',label:'Next Follow-Up',type:'date'},{k:'status',label:'Status',type:'select',opts:L.recStatus},{k:'notes',label:'Notes',type:'text',w:180},
+    {k:'_',label:'Follow-up',type:'ro',fmt:r=>{const s=followState(r.next,r.status==='Closed');return `<span class="pill ${s.cls}">${s.label}</span>`}}];
+  const card=(l,v,c)=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px">${card('Active recruiters',m.active,'info')}${card('Follow-ups due today',m.today,m.today?'warn':'good')}${card('Follow-ups due this week',m.week,'info')}${card('Overdue follow-ups',m.over,m.over?'crit':'good')}</div>`+
+    slicerHTML('recruiters',defs,S.recruiters)+`<div class="card">${tableHTML('recruiters',rows,cols,{rowCls:r=>'st-'+followState(r.next,r.status==='Closed').cls,addLabel:'Add recruiter',filter:filtered})}</div>`;
+  bindTable(el,'recruiters',()=>({ref:nextRef('recruiters'),name:'',agency:'',company:'',phone:'',email:'',linkedin:'',last:T(),next:addDays(T(),7),status:'New',notes:''}));
+};
+
+/* ---- 10. Networking ---- */
+R.network = el => {
+  const t=T(), wkStart=addDays(t,-7);
+  const m={total:S.contacts.length,weekly:S.contacts.filter(r=>r.last&&r.last>wkStart&&r.last<=t).length,asked:S.contacts.filter(r=>['Referral Asked','Referral Received'].includes(r.status)).length,recv:S.contacts.filter(r=>r.status==='Referral Received').length};
+  const defs=[{k:'status',label:'Status',opts:L.netStatus},{k:'referral',label:'Referral Potential',opts:L.referral},{k:'relationship',label:'Relationship'},{k:'company',label:'Company'}];
+  const {rows,filtered}=applySlicers('network',defs,S.contacts);
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'person',label:'Person',type:'text',w:140},{k:'company',label:'Company',type:'text',w:160},{k:'title',label:'Title',type:'text',w:150},{k:'relationship',label:'Relationship',type:'select',opts:L.relationship},{k:'referral',label:'Referral Potential',type:'select',opts:L.referral},{k:'last',label:'Last Contact',type:'date'},{k:'next',label:'Next Follow-Up',type:'date'},{k:'method',label:'Contact Method',type:'select',opts:L.method},{k:'status',label:'Status',type:'select',opts:L.netStatus},{k:'notes',label:'Notes',type:'text',w:180},
+    {k:'_',label:'Follow-up',type:'ro',fmt:r=>{const s=followState(r.next,r.status==='Dormant');return `<span class="pill ${s.cls}">${s.label}</span>`}}];
+  const card=(l,v,c)=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px">${card('Total contacts',m.total,'info')}${card('Connections this week',m.weekly,m.weekly>=3?'good':'warn')}${card('Referrals asked',m.asked,'info')}${card('Referrals received',m.recv,m.recv?'good':'warn')}</div>`+
+    slicerHTML('network',defs,S.contacts)+`<div class="card">${tableHTML('contacts',rows,cols,{rowCls:r=>'st-'+followState(r.next,r.status==='Dormant').cls,addLabel:'Add contact',filter:filtered})}</div>`;
+  bindTable(el,'contacts',()=>({ref:nextRef('contacts'),person:'',company:'',title:'',relationship:'Industry Peer',referral:'Medium',last:T(),next:addDays(T(),7),method:'Email',status:'To Contact',notes:''}));
+};
+
+/* ---- 11. Compliance ---- */
+R.compliance = el => {
+  const rows=S.compliance.slice().sort((a,b)=>String(a.week).localeCompare(String(b.week)));
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'week',label:'Week Ending',type:'date'},{k:'apps',label:'Applications Submitted',type:'number',min:0},{k:'networking',label:'Networking Activities',type:'number',min:0},{k:'recruiters',label:'Recruiter Meetings',type:'number',min:0},{k:'training',label:'Training / Courses',type:'number',min:0},
+    {k:'_t',label:'Total Activities',type:'ro',cls:'num',fmt:r=>compliance(r).total},{k:'_m',label:'Requirement Met',type:'ro',fmt:r=>compliance(r).total>=S.settings.weeklyRequirement?'<span class="pill good">Yes</span>':'<span class="pill crit">No</span>'},{k:'_f',label:'Flag',type:'ro',fmt:r=>{const c=compliance(r);return `<span class="pill ${c.cls}">${c.label}</span>`}},{k:'notes',label:'Notes',type:'text',w:200}];
+  const ok=rows.filter(r=>compliance(r).cls==='good').length;
+  const last=rows[rows.length-1];
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px"><div class="kpi ${ok===rows.length?'good':'warn'}"><div class="l">Weeks compliant</div><div class="v">${ok}/${rows.length}</div></div><div class="kpi info"><div class="l">Weekly requirement</div><div class="v">${isOwner()?`<input type="number" id="req" min="1" value="${S.settings.weeklyRequirement}" style="width:70px;font-family:var(--mono);font-size:22px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:var(--surface-2)">`:S.settings.weeklyRequirement}</div><div class="s">work-search activities / week</div></div><div class="kpi ${last?compliance(last).cls:'info'}"><div class="l">Current week</div><div class="v">${last?compliance(last).total:0}</div><div class="s">activities logged</div></div></div>
+  <div class="card">${tableHTML('compliance',rows,cols,{rowCls:r=>'st-'+compliance(r).cls,addLabel:'Add week'})}<div class="note">Flag rule: total ≥ requirement → Compliant; one short → At Risk; otherwise Not Compliant. Adjust the requirement to match your state's rule (Ohio currently asks for two work-search activities per week; confirm with ODJFS).</div></div>`;
+  const req=el.querySelector('#req'); if(req) req.addEventListener('change',e=>guarded(async()=>{ await db.updateSettings({weeklyRequirement:Math.max(1,+e.target.value||1)}); render(); }));
+  bindTable(el,'compliance',()=>({ref:nextRef('compliance'),week:weekEnding(addDays(last?last.week:T(),7)),apps:0,networking:0,recruiters:0,training:0,notes:''}));
+};
+
+/* ---- 12. Budget (owner) ---- */
+R.budget = el => {
+  const _ce=canEdit; if(!financeEditable()) el.classList.add('ro'); else el.classList.remove('ro');
+  const fixed=S.expenses.filter(e=>e.type==='Fixed'), variable=S.expenses.filter(e=>e.type==='Variable');
+  const tb=sum(S.expenses.map(e=>e.budget)), ta=sum(S.expenses.map(e=>e.actual));
+  const cols=[{k:'category',label:'Category',type:'text',w:140},{k:'budget',label:'Budget',type:'number',min:0},{k:'actual',label:'Actual',type:'number',min:0},{k:'_v',label:'Variance',type:'ro',cls:'num',fmt:r=>{const v=r.budget-r.actual;return `<span style="color:var(--${v<0?'crit':'good'})">${fmtMoney(v)}</span>`}},{k:'_p',label:'% of budget',type:'ro',cls:'num',fmt:r=>r.budget?Math.round(r.actual/r.budget*100)+'%':'—'}];
+  const foot=rs=>`<tr><td>Subtotal</td><td class="num">${fmtMoney(sum(rs.map(r=>r.budget)))}</td><td class="num">${fmtMoney(sum(rs.map(r=>r.actual)))}</td><td class="num">${fmtMoney(sum(rs.map(r=>r.budget-r.actual)))}</td><td class="num">${Math.round(sum(rs.map(r=>r.actual))/Math.max(1,sum(rs.map(r=>r.budget)))*100)}%</td><td></td></tr>`;
+  const cls=r=>r.actual>r.budget*(1+CFG.budgetCritPct/100)?'st-crit':r.actual>r.budget?'st-warn':'st-good';
+  const card=(l,v,c,s)=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||''}</div></div>`;
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px">${card('Monthly budget',fmtMoney(tb),'info')}${card('Actual spend',fmtMoney(ta),ta>tb?'crit':'good',ta>tb?'over plan':'within plan')}${card('Variance',fmtMoney(tb-ta),tb-ta<0?'crit':'good')}${card('Fixed share',Math.round(sum(fixed.map(e=>e.actual))/Math.max(1,ta)*100)+'%','info','of actual spend')}</div>
+  <div class="grid g12"><div class="card span6"><h3>Fixed expenses</h3>${tableHTML('fixed',fixed,cols,{rowCls:cls,foot:foot(fixed),addLabel:'Add fixed'})}</div><div class="card span6"><h3>Variable expenses</h3>${tableHTML('variable',variable,cols,{rowCls:cls,foot:foot(variable),addLabel:'Add variable'})}</div>
+  <div class="card span12"><h3>Budget vs actual by category</h3><div id="bc" class="chart"></div><div class="note">Actual spend total (${fmtMoney(ta)}) feeds the Cash Runway Calculator's monthly expenses automatically. ${CFG.financeVisibility==='members'?'Visible to all members (Settings → Finance visibility).':'Only the workspace owner can see this module.'}</div></div></div>`;
+  bindTable(el,'expenses',()=>null); // change/delete handlers
+  el.querySelectorAll('[data-add]').forEach(b=>{ b.replaceWith(b.cloneNode(true)); });
+  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.insert('expenses',{type:b.dataset.add==='fixed'?'Fixed':'Variable',category:'New',budget:0,actual:0,sort_order:S.expenses.length+1}); render(); },'Row added')));
+  Plotly.newPlot(el.querySelector('#bc'),[{type:'bar',name:'Budget',x:S.expenses.map(e=>e.category),y:S.expenses.map(e=>e.budget),marker:{color:cssVar('--line')},hovertemplate:'%{x} budget $%{y:,}<extra></extra>'},
+    {type:'bar',name:'Actual',x:S.expenses.map(e=>e.category),y:S.expenses.map(e=>e.actual),marker:{color:S.expenses.map(e=>e.actual>e.budget?cssVar('--crit'):cssVar('--accent'))},hovertemplate:'%{x} actual $%{y:,}<extra></extra>'}],
+    {...plotBase(),barmode:'group',showlegend:true,legend:{orientation:'h',y:1.15},height:260,yaxis:{...plotBase().yaxis,tickprefix:'$'}},PCFG);
+};
+
+/* ---- 13. Runway (owner) ---- */
+R.runway = el => {
+  const c=S.cash, cc=cashCalc();
+  const f=[['savings','Savings'],['checking','Checking account balance'],['severance','Severance'],['investments','Investments available'],['unemployment','Monthly unemployment income'],['other','Other monthly income']];
+  el.innerHTML=`<div class="grid g12"><div class="card span4"><h3>Inputs</h3><div class="form">${f.map(([k,l])=>`<label for="cash-${k}">${l}</label><input id="cash-${k}" type="number" data-k="${k}" value="${c[k]}">`).join('')}
+    <label>Monthly expenses (from Budget)</label><div class="out" style="opacity:.8">${fmtMoney(monthlyExpenses())}</div>
+    <div class="sep"></div><label>Available cash</label><div class="out">${fmtMoney(cc.cash)}</div><label>Monthly income</label><div class="out">${fmtMoney(cc.income)}</div><label>Monthly burn rate</label><div class="out" style="color:var(--${cc.burn>0?'crit':'good'})">${fmtMoney(cc.burn)}</div><label>Runway (months)</label><div class="out">${isFinite(cc.months)?cc.months.toFixed(1):'∞'}</div><label>Estimated exhaustion date</label><div class="out">${cc.exhaust?fmtDY(cc.exhaust):'n/a'}</div></div></div>
+    <div class="card span4"><h3>Runway gauge <span class="hint">months</span></h3><div id="rg" class="chart" style="min-height:200px"></div><div style="text-align:center"><span class="pill ${cc.cls}">${cc.cls==='good'?`Green · ${CFG.runwayGreen}+ months`:cc.cls==='warn'?`Yellow · ${CFG.runwayYellow}–${CFG.runwayGreen} months`:`Red · under ${CFG.runwayYellow} months`}</span></div></div>
+    <div class="card span4"><h3>Warning indicators</h3><ul class="alist">
+      <li><span class="dot ${cc.cls}"></span><span><span class="t">Runway band</span><div class="m">${isFinite(cc.months)?cc.months.toFixed(1)+' months of burn covered':'Income covers expenses'}</div></span></li>
+      <li><span class="dot ${cc.burn>0?'warn':'good'}"></span><span><span class="t">Monthly burn</span><div class="m">${fmtMoney(cc.burn)} net outflow per month</div></span></li>
+      <li><span class="dot ${c.severance>0?'warn':'idle'}"></span><span><span class="t">Severance dependency</span><div class="m">${Math.round(c.severance/Math.max(1,cc.cash)*100)}% of available cash is severance</div></span></li>
+      <li><span class="dot ${cc.exhaust&&diffDays(cc.exhaust,T())<180?'crit':'good'}"></span><span><span class="t">Exhaustion within 6 months</span><div class="m">${cc.exhaust?fmtDY(cc.exhaust)+' at current burn':'Not projected'}</div></span></li>
+    </ul></div>
+    <div class="card span12"><h3>Cash trend <span class="hint">projected balance at current burn, next 18 months</span></h3><div id="rt" class="chart"></div></div></div>`;
+  if(!financeEditable()) el.classList.add('ro'); else el.classList.remove('ro');
+  el.querySelectorAll('.form input[data-k]').forEach(i=>i.addEventListener('change',()=>{ if(!financeEditable()) return; guarded(()=>db.updateCash({[i.dataset.k]:+i.value||0})); render(true); }));
+  const col={good:cssVar('--good'),warn:cssVar('--warn'),crit:cssVar('--crit')}[cc.cls];
+  gauge(el.querySelector('#rg'),isFinite(cc.months)?cc.months:24,24,col,'',[{range:[0,6],color:cssVar('--crit-soft')},{range:[6,12],color:cssVar('--warn-soft')},{range:[12,24],color:cssVar('--good-soft')}],isFinite(cc.months)?cc.months.toFixed(1)+' mo':'∞');
+  const xs=[],ys=[]; for(let m=0;m<=18;m++){ const d=parse(T()); d.setMonth(d.getMonth()+m); xs.push(iso(d)); ys.push(Math.max(0,cc.cash-cc.burn*m)); }
+  Plotly.newPlot(el.querySelector('#rt'),[{type:'scatter',mode:'lines+markers',x:xs,y:ys,fill:'tozeroy',fillcolor:cssVar('--accent-soft'),line:{color:cssVar('--accent'),width:2},marker:{size:6},hovertemplate:'%{x|%b %Y}: $%{y:,.0f}<extra></extra>'}],
+    {...plotBase(),height:260,yaxis:{...plotBase().yaxis,tickprefix:'$'},xaxis:{...plotBase().xaxis,tickformat:'%b %y'},
+     shapes:cc.exhaust?[{type:'line',x0:cc.exhaust,x1:cc.exhaust,y0:0,y1:1,yref:'paper',line:{color:cssVar('--crit'),width:1.5,dash:'dash'}}]:[],
+     annotations:cc.exhaust?[{x:cc.exhaust,y:1,yref:'paper',text:'Cash exhausted',showarrow:false,font:{color:cssVar('--crit'),size:11},xanchor:'left'}]:[]},PCFG);
+};
+
+/* ---- 14. Weekly ---- */
+R.weekly = el => {
+  const t=T(), wk=addDays(t,7), cc=cashCalc();
+  const sec=(title,items,cls)=>`<div class="card span6"><h3>${title}<span class="hint">${items.length}</span></h3>${items.length?`<ul class="alist">${items.map(i=>`<li><span class="pill ${i.c||cls||'info'}">${esc(i.p)}</span><span><span class="t">${esc(i.t)}</span><div class="m">${esc(i.m||'')}</div></span><span class="d">${esc(i.d||'')}</span></li>`).join('')}</ul>`:'<div class="empty">Nothing here this week.</div>'}</div>`;
+  const tasks=S.tasks.filter(r=>r.status!=='Complete'&&r.due&&r.due<=wk).sort((a,b)=>a.due.localeCompare(b.due)).map(r=>({p:r.priority,c:taskState(r).cls,t:r.task,m:r.category+' · '+r.status,d:fmtD(r.due)}));
+  const rec=S.recruiters.filter(r=>r.status!=='Closed'&&r.next&&r.next<=wk).map(r=>({p:followState(r.next).label,c:followState(r.next).cls,t:r.name,m:(r.agency||'')+' · '+(r.company||''),d:fmtD(r.next)}));
+  const net=S.contacts.filter(r=>r.next&&r.next<=wk).map(r=>({p:followState(r.next).label,c:followState(r.next).cls,t:r.person,m:(r.title||'')+', '+(r.company||''),d:fmtD(r.next)}));
+  const ints=S.interviews.filter(r=>r.date>=t&&r.date<=wk).map(r=>({p:readiness(r)+'%',c:readyCls(readiness(r)),t:r.company+' — '+r.stage,m:r.type+' · '+(r.interviewer||''),d:fmtD(r.date)}));
+  const waiting=S.apps.filter(r=>r.status==='Waiting'||(r.status==='Active'&&r.applied&&diffDays(t,r.applied)>=7&&['Applied','Recruiter Screen'].includes(r.stage))).map(r=>({p:r.stage,c:'wait',t:r.company+' — '+r.position,m:'Next: '+(r.next||''),d:r.applied?diffDays(t,r.applied)+'d ago':''}));
+  let fin='';
+  if(financeVisible()){
+    const budget=S.expenses.filter(e=>e.actual>e.budget).map(e=>({p:'Over',c:e.actual>e.budget*(1+CFG.budgetCritPct/100)?'crit':'warn',t:e.category,m:`${fmtMoney(e.actual)} vs ${fmtMoney(e.budget)} budget`,d:'+'+fmtMoney(e.actual-e.budget)}));
+    const cash=[{p:cc.cls==='good'?'OK':cc.cls==='warn'?'Watch':'Critical',c:cc.cls,t:`Runway ${isFinite(cc.months)?cc.months.toFixed(1)+' months':'∞'}`,m:cc.exhaust?'Cash exhausted '+fmtDY(cc.exhaust)+' at current burn':'Income covers expenses',d:fmtMoney(cc.cash)}];
+    if(cc.burn>0&&cc.cash/cc.burn<6) cash.push({p:'Action',c:'crit',t:'Reduce burn or accelerate offers',m:'Under 6 months of runway',d:''});
+    fin=sec('Budget issues',budget)+sec('Cash runway alerts',cash);
+  }
+  el.innerHTML=`<div class="grid g12"><div class="card span12" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px"><div><b>This week:</b> ${fmtD(t)} – ${fmtD(addDays(t,6))}</div><div class="sample">Every section recomputes from the underlying trackers.</div></div>
+  ${sec('Tasks due this week',tasks)}${sec('Recruiter follow-ups',rec)}${sec('Networking follow-ups',net)}${sec('Interviews scheduled',ints)}${sec('Applications waiting for response',waiting,'wait')}${fin}</div>`;
+};
+
+/* ---- 15. Settings & Administration ---- */
+let ADMIN_TAB='users';
+const ROLE_DESC={owner:'Full control: every module, finance, users, settings, logs.',editor:'Can view and edit the modules in their scope.',viewer:'Can view the modules in their scope (read-only).'};
+function genPassword(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; const v=crypto.getRandomValues(new Uint8Array(12)); let s=''; v.forEach(x=>s+=a[x%a.length]); return s.slice(0,4)+'-'+s.slice(4,8)+'-'+s.slice(8,12); }
+function csvDownload(name, rows){
+  if(!canExport()) return toast('You are not authorized to export');
+  if(!rows.length) return toast('Nothing to export');
+  const cols=Object.keys(rows[0]); const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv=[cols.join(',')].concat(rows.map(r=>cols.map(c=>q(typeof r[c]==='object'?JSON.stringify(r[c]):r[c])).join(','))).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  logEvent('export',{file:name,rows:rows.length});
+}
+function textDownload(name, text){ const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(text); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function permBadges(u){ const out=[]; if(u.role!=='owner'){ out.push(u.modules&&u.modules.length?`<span class="pill idle" title="${esc(u.modules.map(m=>MODULE_GROUPS[m]).join(', '))}">scope: ${u.modules.length} of 4 groups</span>`:'<span class="pill good">full scope</span>'); out.push(u.can_export?'<span class="pill info">export</span>':'<span class="pill" style="opacity:.6">no export</span>'); out.push(CFG.financeVisibility==='members'?'<span class="pill info">finance</span>':'<span class="pill" style="opacity:.6">no finance</span>'); if(u.read_only) out.push('<span class="pill warn" title="legacy read-only flag — edit the user to clear">read-only</span>'); } return out.join(' ')||'—'; }
+function ownerName(){ return (ME.display_name||ME.first_name)||(USER?USER.email.split('@')[0]:'the workspace owner'); }
+function waCredentialsText(u, pw){ // short WhatsApp-friendly credentials message
+  const first=u.first_name||(u.display_name||u.email||'').split(/[ @]/)[0]||'there';
+  const scope=u.modules&&u.modules.length? u.modules.map(m=>MODULE_GROUPS[m]).join(', ') : 'all modules';
+  return [`*CareerShift access*`,`Hi ${first} — ${ownerName()} has set you up on CareerShift.`,``,`🔗 App: ${appUrl()}`,`👤 Sign in: ${u.email}`,pw?`🔑 Temporary password: ${pw}`:`🔑 Password: the one you chose (use "Forgot password?" if needed)`,`🎯 Role: ${u.role}${u.read_only?' (read-only)':''} · ${scope}`,``,`First sign-in: open the link, enter your email + ${pw?'temporary ':''}password${pw?', then choose your own password (8+ characters)':''}. Changes save automatically. Reply here if anything blocks you.`].join('\n');
+}
+const waLink=(phone,text)=>`https://wa.me/${(phone||'').replace(/[^\d]/g,'')}?text=${encodeURIComponent(text)}`;
+const mailtoLink=(to,subject,body)=>`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+function accessSummary(role, modules, canExp, readOnly){
+  const scope=modules&&modules.length? modules.map(m=>MODULE_GROUPS[m]).join(', ') : 'every shared module';
+  const verb=role==='viewer'||readOnly? 'view (read-only)' : 'view and edit';
+  const fin=CFG.financeVisibility==='members'? (role==='editor'&&!readOnly? 'can view and edit Budget & Cash Runway' : 'can view Budget & Cash Runway') : 'cannot see Budget & Cash Runway';
+  return `Will be able to ${verb} ${scope}; ${fin}; ${canExp?'can export data':'cannot export data'}; always sees the Executive, Daily and Weekly dashboards (limited to data in scope).`;
+}
+function onboardingText(u, pw){
+  const first=u.first_name||(u.display_name||u.email||'').split(/[ @]/)[0]||'there';
+  const scope=u.modules&&u.modules.length? u.modules.map(m=>MODULE_GROUPS[m]) : Object.values(MODULE_GROUPS);
+  const on_=ownerName(); const lines=[`Hi ${first},`,``,`${on_.charAt(0).toUpperCase()+on_.slice(1)} has set you up on CareerShift — the workspace we're using to run the job search.`,``,`YOUR ACCESS`,`• App link: ${appUrl()}`,`• Sign in with: ${u.email}`];
+  if(pw) lines.push(`• Temporary password: ${pw}`); else lines.push(`• Password: the one you chose (use "Forgot password?" on the sign-in screen if needed)`);
+  lines.push(`• Role: ${u.role}${u.read_only?' (read-only)':''} — ${ROLE_DESC[u.role]||''}`);
+  lines.push(``,`FIRST SIGN-IN (about 2 minutes)`,`1. Open the app link above — it works on desktop or phone.`,`2. Enter your email and the ${pw?'temporary ':''}password, then click Sign in.`);
+  if(pw) lines.push(`3. You'll be asked to choose your own password (8+ characters). Do that once.`,`4. You land on the Executive Dashboard; the left rail lists the modules you can open.`);
+  else lines.push(`3. You land on the Executive Dashboard; the left rail lists the modules you can open.`);
+  lines.push(``,`WHERE YOU CAN HELP`); scope.forEach(s=>lines.push(`• ${s}`));
+  lines.push(``,`GOOD TO KNOW`,`• Changes save automatically and everyone sees them live.`,`• Module 2 (Daily Action) and 14 (Weekly Planning) show what needs attention — a good place to start each day.`,`• If a sign-in problem comes up, reply to this message and I'll reset your access.`,``,`Thanks — ${ownerName()}`);
+  return lines.join('\n');
+}
+function openModal(html){ const m=document.getElementById('modal'); m.innerHTML=html; document.getElementById('modalBack').hidden=false; setTimeout(()=>{ const f=m.querySelector('input,select,textarea,button'); f&&f.focus(); },30); }
+function closeModal(){ document.getElementById('modalBack').hidden=true; document.getElementById('modal').innerHTML=''; }
+document.getElementById('modalBack').addEventListener('click',e=>{ if(e.target.id==='modalBack') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !document.getElementById('modalBack').hidden) closeModal(); });
+
+function userModal(u){ // u = existing user (edit) or null (create)
+  const edit=!!u; const mail=S.mailConfig&&S.mailConfig.email_configured;
+  const mods=(u&&u.modules)||[]; const isOwn=u&&u.role==='owner';
+  const html=`<div class="mhead"><b>${edit?'Edit user':'Add user'}</b><button class="mclose" id="mClose" aria-label="Close">×</button></div>
+  <form id="fUser" class="mbody">
+    <div class="grid2"><div class="field"><label for="uFirst">First name *</label><input id="uFirst" required value="${esc(u?u.first_name||'':'')}"></div><div class="field"><label for="uLast">Last name *</label><input id="uLast" required value="${esc(u?u.last_name||'':'')}"></div></div>
+    <div class="grid2"><div class="field"><label for="uEmail">Email *</label><input id="uEmail" type="email" required value="${esc(u?u.email:'')}" ${edit?'disabled':''}></div>
+    <div class="field"><label for="uPhone">Mobile / WhatsApp (with country code)</label><input id="uPhone" type="tel" placeholder="+1 614 555 0100" value="${esc(u?u.phone||'':'')}"></div></div>
+    ${edit?'':`<div class="grid2"><div class="field"><label for="uPw">Temporary password *</label><input id="uPw" type="password" minlength="6" required value="${genPassword()}"><button type="button" class="btn" id="uGen" style="margin-top:6px">🔒 Generate secure password</button><div class="note">Min 6 chars. They choose their own at first login.</div></div>
+    <div class="field"><label for="uStatus">Account status</label><select id="uStatus"><option value="active">Active</option><option value="disabled">Disabled (create now, enable later)</option></select><label class="chk" style="margin-top:10px"><input type="checkbox" id="uRequire" checked> Require password change at next login</label></div></div>`}
+    ${edit&&!isOwn?`<div class="field"><label for="uStatus">Account status</label><select id="uStatus"><option value="active" ${!(u.banned_until&&new Date(u.banned_until)>new Date())?'selected':''}>Active</option><option value="disabled" ${(u.banned_until&&new Date(u.banned_until)>new Date())?'selected':''}>Disabled</option></select></div>`:''}
+
+    <div class="acc"><div class="acc-h">🎯 Access level</div>
+      ${isOwn?`<div class="note">You are the workspace owner: full access to everything. This cannot be changed.</div>`:`
+      <div class="acc-row"><span class="acc-l">Role</span><div class="seg" id="uRoleSeg"><label><input type="radio" name="uRole" value="editor" ${(!u||u.role==='editor')?'checked':''}> <b>Editor</b> — adds &amp; updates</label><label><input type="radio" name="uRole" value="viewer" ${(u&&u.role==='viewer')?'checked':''}> <b>Viewer</b> — read-only</label></div></div>
+      <div class="acc-row"><span class="acc-l">Scope</span><div><div class="seg"><label><input type="radio" name="uScope" value="all" ${mods.length?'':'checked'}> Full workspace</label><label><input type="radio" name="uScope" value="limited" ${mods.length?'checked':''}> Limited to selected modules</label></div>
+        <div class="grid2" id="uModsBox" style="margin-top:6px;${mods.length?'':'opacity:.55'}">${Object.entries(MODULE_GROUPS).map(([k,l])=>`<label class="chk"><input type="checkbox" class="uMod" value="${k}" ${mods.includes(k)?'checked':''}> ${l}</label>`).join('')}</div></div></div>
+      <div class="acc-row"><span class="acc-l">Extras</span><div><label class="chk"><input type="checkbox" id="uExport" ${u&&u.can_export?'checked':''}> Authorize data export / download</label>
+        <div class="note" style="margin:0">Budget &amp; Cash Runway follow the workspace setting (currently <b>${CFG.financeVisibility==='members'?'visible to all members':'owner only'}</b> — change under Settings).</div></div></div>
+      <div class="acc-sum" id="uSummary"></div>`}
+    </div>
+    <div class="field"><label for="uNotes">Notes (internal)</label><input id="uNotes" value="${esc(u?u.notes||'':'')}" placeholder="e.g. former colleague, helps with networking"></div>
+
+    ${edit?'':`<div class="acc"><div class="acc-h">📨 Send credentials via</div>
+      <label class="chk"><input type="checkbox" id="uSendMail" checked> ✉ Email — ${mail?'sent automatically from CareerShift':'opens a pre-filled email in your email app (automatic sending needs an email provider — see Security Audit)'}</label>
+      <label class="chk"><input type="checkbox" id="uSendWa"> 💬 WhatsApp — opens a chat with the credentials message<span id="uWaHint" class="note" style="display:inline;margin-left:6px"></span></label>
+      <div class="note" style="margin:4px 0 0">The onboarding kit (full email draft, copy, download) opens after creation either way.</div></div>`}
+    <div id="uMsg"></div>
+    <div class="mfoot"><button type="button" class="btn" id="mCancel">Cancel</button><button type="submit" class="btn primary" id="mSave">${edit?'Save changes':'Create user'}</button></div>
+  </form>`;
+  openModal(html);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  $('#mClose').onclick=$('#mCancel').onclick=closeModal;
+  eyeAll(m);
+  if(!edit){ $('#uGen').onclick=()=>{ $('#uPw').value=genPassword(); if($('#uPw').type==='password') $('#uPw').nextElementSibling.click(); }; }
+  const readAccess=()=>{ const role=(m.querySelector('input[name=uRole]:checked')||{}).value||'editor'; const limited=(m.querySelector('input[name=uScope]:checked')||{}).value==='limited'; const modules=limited?[...m.querySelectorAll('.uMod:checked')].map(c=>c.value):[]; return {role,limited,modules,canExp:!!($('#uExport')&&$('#uExport').checked)}; };
+  const refreshSummary=()=>{ const s=$('#uSummary'); if(!s) return; const a=readAccess(); const box=$('#uModsBox'); if(box) box.style.opacity=a.limited?'1':'.55'; s.textContent=(a.limited&&!a.modules.length)?'Pick at least one module for a limited scope.':accessSummary(a.role,a.modules,a.canExp,false); };
+  m.querySelectorAll('.uMod').forEach(c=>c.addEventListener('change',()=>{ m.querySelector('input[name=uScope][value=limited]').checked=true; refreshSummary(); }));
+  m.querySelectorAll('input[name=uRole],input[name=uScope],#uExport').forEach(x=>x.addEventListener('change',refreshSummary)); refreshSummary();
+  const waHint=()=>{ const h=$('#uWaHint'); if(h) h.textContent=$('#uPhone').value.trim()?'':'(no mobile — WhatsApp will ask you to pick the contact)'; }; if(!edit){ $('#uPhone').addEventListener('input',waHint); waHint(); }
+  $('#fUser').addEventListener('submit',e=>{ e.preventDefault();
+    // open the WhatsApp tab synchronously (browsers block pop-ups opened after an await)
+    const wantWa=!edit&&$('#uSendWa').checked; const waWin=wantWa? window.open('about:blank','_blank') : null;
+    guarded(async()=>{
+      const a=isOwn?{role:'owner',limited:false,modules:[],canExp:true}:readAccess();
+      if(a.limited && !a.modules.length) throw new Error('Pick at least one module for a limited scope');
+      if(!edit && USER && $('#uEmail').value.trim().toLowerCase()===USER.email.toLowerCase()) throw new Error('That is your own email — you are already the owner. Add a different person.');
+      const base={first_name:$('#uFirst').value.trim(),last_name:$('#uLast').value.trim(),phone:$('#uPhone').value.trim(),can_export:String(a.canExp),read_only:'false',modules:a.modules,notes:$('#uNotes').value.trim(),app_url:appUrl()};
+      $('#mSave').disabled=true; $('#mSave').textContent=edit?'Saving…':'Creating…';
+      if(edit){
+        await db.admin({action:'update_user',user_id:u.user_id,...base,...(isOwn?{}:{role:a.role,status:$('#uStatus').value})});
+        closeModal(); S.adminUsers=null; await refresh(); await db.loadAdmin(); render(); toast('User updated');
+      } else {
+        const email=$('#uEmail').value.trim().toLowerCase(), pw=$('#uPw').value;
+        const r=await db.admin({action:'invite',email,role:a.role,password:pw,status:$('#uStatus').value,require_change:String($('#uRequire').checked),send_email:String(mail&&$('#uSendMail').checked),...base});
+        S.adminUsers=null; await db.loadAll(); await db.loadAdmin(); render();
+        const created={...base,phone:$('#uPhone').value.trim(),email,role:a.role,read_only:false,can_export:a.canExp,display_name:r.display_name};
+        const tempPw=r.created_account? pw : null;
+        if(waWin){ if(tempPw||true){ waWin.location=waLink(created.phone, waCredentialsText(created,tempPw)); logEvent('onboarding_whatsapp',{target:email,with_password:!!tempPw}); } }
+        if(!mail && $('#uSendMail').checked){ logEvent('onboarding_mailto',{target:email}); setTimeout(()=>{ location.href=mailtoLink(email,`Your CareerShift access — ${S.settings.name||'workspace'}`,onboardingText(created,tempPw)); },300); }
+        kitModal(created, tempPw, r);
+      }
+    }).then(()=>{ const s=$('#mSave'); if(s){ s.disabled=false; s.textContent=edit?'Save changes':'Create user'; } if(waWin && waWin.location.href==='about:blank') waWin.close(); });
+  });
+}
+function kitModal(u, pw, r){ // onboarding kit: email draft with the temporary password, send / WhatsApp / copy
+  const text=onboardingText(u,pw);
+  const first=u.first_name||(u.display_name||u.email||'').split(/[ @]/)[0]||'there';
+  const status = r? (r.emailed? `<div class="msg ok">Account ${r.created_account?'created':'linked'} and the temporary password was emailed to <b>${esc(u.email)}</b>. You can still send it again below.</div>` : r.created_account? `<div class="msg info">Account created. Review the draft below, then <b>Send email</b> or <b>Share via WhatsApp</b>. The temporary password is shown only in this kit.</div>` : `<div class="msg ok">${esc(u.email)} already had an account and was added to the workspace. Their existing password still applies.</div>`)
+    : (pw? '' : `<div class="msg info">No temporary password is available for an existing member (passwords are never stored in readable form). Use <b>Reset pw</b> to issue a new one — the kit then reopens with it filled in.</div>`);
+  const mail=S.mailConfig&&S.mailConfig.email_configured;
+  const subj=`Your CareerShift access — ${S.settings.name||'workspace'}`;
+
+  openModal(`<div class="mhead"><b>Onboarding kit — ${esc(u.display_name||u.email)}</b><button class="mclose" id="kClose">×</button></div><div class="mbody">${status}
+    ${pw?`<div class="pwbox"><div><span>Temporary password</span><code id="kPw">${esc(pw)}</code></div><button class="btn" id="kCopyPw">Copy password</button></div>`:''}
+    <div class="draft">
+      <div class="draft-row"><span>From</span><div>${esc(ownerName())} ${USER?`&lt;${esc(USER.email)}&gt;`:''}</div></div>
+      <div class="draft-row"><span>To</span><div><b>${esc(u.email)}</b>${u.phone?` · WhatsApp ${esc(u.phone)}`:''}</div></div>
+      <div class="draft-row"><span>Subject</span><input id="kSubj" value="${esc(subj)}"></div>
+      <textarea id="kText" rows="17">${esc(text)}</textarea>
+    </div>
+    <div class="kit-actions">
+      <button class="btn primary" id="kSend" title="${mail?'Send this draft from CareerShift':'Opens the draft in your email app (automatic sending needs an email provider — see Security Audit)'}">${mail&&MODE!=='demo'?'✉ Send email':'✉ Send via my email app'}</button>
+      <a class="btn wa" id="kWa" href="#" target="_blank" rel="noopener" title="Sends a short credentials message (link, email, temporary password, first steps)">💬 Send via WhatsApp${u.phone?'':' (pick contact)'}</a>
+      <button class="btn" id="kCopy">Copy message</button>
+      <button class="btn" id="kDl">Download .txt</button>
+      <button class="btn" id="kDone">Done</button>
+    </div>
+    <div class="note">${u.phone?'WhatsApp opens a chat with '+esc(u.phone)+' and the message pre-filled — press send there.':'No mobile number on file, so WhatsApp will ask you to pick the contact; add a number via Edit to skip that step.'} Checklist: ① send ② confirm they can sign in ③ confirm they changed the temporary password (status turns to "Active" in Users) ④ walk them through their modules.</div></div>`);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  $('#kWa').href=waLink(u.phone, waCredentialsText(u,pw));
+  $('#kClose').onclick=$('#kDone').onclick=closeModal;
+  $('#kCopy').onclick=()=>navigator.clipboard?.writeText($('#kText').value).then(()=>toast('Message copied')).catch(()=>toast('Select the text and copy manually'));
+  const cp=$('#kCopyPw'); if(cp) cp.onclick=()=>navigator.clipboard?.writeText(pw).then(()=>toast('Password copied'));
+  $('#kDl').onclick=()=>textDownload(`careershift-onboarding-${(u.email||'user').split('@')[0]}.txt`,`Subject: ${$('#kSubj').value}\n\n${$('#kText').value}`);
+  $('#kWa').addEventListener('click',()=>logEvent('onboarding_whatsapp',{target:u.email,with_password:!!pw}));
+  $('#kSend').onclick=()=>{
+    if(mail&&MODE!=='demo'){ const btn=$('#kSend'); btn.disabled=true; btn.textContent='Sending…'; guarded(async()=>{ const r2=await db.admin({action:'send_message',to:u.email,subject:$('#kSubj').value,text:$('#kText').value}); if(!r2.emailed) throw new Error(r2.mail_error||'Not sent'); btn.textContent='✓ Sent'; },'Email sent to '+u.email).then(()=>{ if(btn.textContent!=='✓ Sent'){ btn.disabled=false; btn.textContent='✉ Send email'; } }); }
+    else { logEvent('onboarding_mailto',{target:u.email}); location.href=mailtoLink(u.email,$('#kSubj').value,$('#kText').value); }
+  };
+  logEvent('onboarding_kit',{target:u.email,with_password:!!pw});
+}
+function resetModal(u){
+  openModal(`<div class="mhead"><b>Reset password — ${esc(u.display_name||u.email)}</b><button class="mclose" id="rClose">×</button></div><form id="fReset" class="mbody">
+    <div class="field"><label for="rPw">New temporary password</label><input id="rPw" type="password" minlength="6" required value="${genPassword()}"><button type="button" class="btn" id="rGen" style="margin-top:6px">Generate</button><div class="note">The user will be required to choose their own password at next login.</div></div>
+    <div class="acc"><div class="acc-h">📨 Send the new password via</div>
+      <label class="chk"><input type="checkbox" id="rSend" checked> ✉ Email — ${S.mailConfig&&S.mailConfig.email_configured?'sent automatically from CareerShift':'opens a pre-filled email in your email app'}</label>
+      <label class="chk"><input type="checkbox" id="rWa"> 💬 WhatsApp — opens a chat with the credentials message${u.phone?'':' (no mobile on file — you will pick the contact)'}</label></div>
+    <div class="mfoot"><button type="button" class="btn" id="rCancel">Cancel</button><button class="btn primary" type="submit">Reset & show onboarding kit</button></div></form>`);
+  const m=document.getElementById('modal'); const $=s=>m.querySelector(s);
+  eyeAll(m); $('#rPw').nextElementSibling.click();
+  $('#rClose').onclick=$('#rCancel').onclick=closeModal; $('#rGen').onclick=()=>{ $('#rPw').value=genPassword(); };
+  $('#fReset').addEventListener('submit',e=>{ e.preventDefault(); const mail=S.mailConfig&&S.mailConfig.email_configured; const waWin=$('#rWa').checked? window.open('about:blank','_blank'):null; guarded(async()=>{ const r=await db.admin({action:'reset_password',user_id:u.user_id,password:$('#rPw').value,send_email:String(mail&&$('#rSend').checked),app_url:appUrl()}); S.adminUsers=null; await db.loadAdmin(); render(); if(waWin){ waWin.location=waLink(u.phone, waCredentialsText(u,r.temp_password)); logEvent('onboarding_whatsapp',{target:u.email,with_password:true}); } if(!mail && $('#rSend').checked){ logEvent('onboarding_mailto',{target:u.email}); setTimeout(()=>{ location.href=mailtoLink(u.email,'Your new CareerShift temporary password',onboardingText(u,r.temp_password)); },300); } kitModal(u,r.temp_password,{created_account:true,emailed:r.emailed,mail_error:r.mail_error}); }).then(()=>{ if(waWin && waWin.location.href==='about:blank') waWin.close(); }); });
+}
+
+function healthChecks(){
+  const t=T(), wk=addDays(t,-7);
+  const events=S.events||[], users=S.adminUsers||[], inv=S.invites||[];
+  const daysSince=d=>d?diffDays(t,String(d).slice(0,10)):null;
+  const apps7=S.apps.filter(a=>a.applied&&a.applied>wk).length;
+  const net7=S.contacts.filter(c=>c.last&&c.last>wk).length + S.recruiters.filter(r=>r.last&&r.last>wk).length;
+  const responded=S.apps.filter(a=>a.stage!=='Applied').length;
+  const followups=[...S.recruiters.map(r=>r.next),...S.contacts.map(c=>c.next)].filter(Boolean);
+  const overdueF=followups.filter(d=>d<t).length;
+  const lastExport=events.find(e=>e.event==='export'||e.event==='export_json');
+  const activeDays=new Set(events.filter(e=>e.created_at>new Date(Date.now()-7*DAY).toISOString()).map(e=>String(e.created_at).slice(0,10))).size;
+  const pendingFirst=users.filter(u=>u.must_change_password).length, never=users.filter(u=>!u.last_sign_in_at).length, disabled=users.filter(u=>u.banned_until&&new Date(u.banned_until)>new Date()).length;
+  const staleInv=inv.filter(i=>daysSince(i.created_at)>7).length;
+  const exporters=users.filter(u=>u.role!=='owner'&&u.can_export).length, wideScope=users.filter(u=>u.role==='editor'&&!u.read_only&&(!u.modules||!u.modules.length)).length;
+  const chk=(group,name,cls,detail,fix)=>({group,name,cls,detail,fix});
+  const out=[
+    chk('Security','Row-level security','good','Every table enforces workspace membership, role, read-only flag and module scope in Postgres, not just in the UI.'),
+    chk('Security','Finance visibility',CFG.financeVisibility==='owner'?'good':'warn',CFG.financeVisibility==='owner'?'Budget and Cash Runway are owner-only.':'Budget and Cash Runway are visible to all members.','Settings → Finance visibility'),
+    chk('Security','Invitation email delivery',(S.mailConfig&&S.mailConfig.email_configured)?'good':'warn',(S.mailConfig&&S.mailConfig.email_configured)?'Temporary passwords are emailed automatically.':'No email provider configured — the onboarding kit shows the temporary password for you to send.','Add RESEND_API_KEY to the admin-users function secrets'),
+    chk('Security','App version deployed',!LATEST?'info':cmpVer(APP_VERSION,LATEST)<0?'crit':'good',!LATEST?`Running v${APP_VERSION} (build ${APP_BUILD}); latest unknown.`:cmpVer(APP_VERSION,LATEST)<0?`Running v${APP_VERSION}; latest release is v${LATEST}.`:`Running v${APP_VERSION} (build ${APP_BUILD}) — latest.`,cmpVer(APP_VERSION,LATEST||'0')<0?'Replace index.html on your host':null),
+    chk('Security','Members on old versions',(S.events||[]).some(e=>e.event==='sign_in'&&e.detail&&e.detail.version&&LATEST&&cmpVer(e.detail.version,LATEST)<0&&e.created_at>new Date(Date.now()-7*DAY).toISOString())?'warn':'good',`${new Set((S.events||[]).filter(e=>e.event==='sign_in'&&e.detail&&e.detail.version&&LATEST&&cmpVer(e.detail.version,LATEST)<0&&e.created_at>new Date(Date.now()-7*DAY).toISOString()).map(e=>e.user_email)).size} member(s) signed in on an older build this week.`,'Send them the new app link / clear cache'),
+    chk('Security','App link configured',CFG.appUrl?'good':'warn',CFG.appUrl?`Onboarding messages point to ${CFG.appUrl}`:'No app link set — onboarding messages fall back to the current page address.','Settings → App link'),
+    chk('Security','Accounts pending first sign-in',pendingFirst?'warn':'good',`${pendingFirst} member${pendingFirst===1?'':'s'} still on a temporary password.`,pendingFirst?'Follow up or reset their temporary password':null),
+    chk('Security','Members who never signed in',never?'warn':'good',`${never} member${never===1?'':'s'} have never signed in.`),
+    chk('Security','Disabled accounts',disabled?'info':'good',`${disabled} disabled account${disabled===1?'':'s'}.`),
+    chk('Security','Export rights granted',exporters?'info':'good',`${exporters} non-owner member(s) may export data.`,exporters?'Review in Users → Edit':null),
+    chk('Security','Editors with full write scope',wideScope>2?'warn':'info',`${wideScope} editor(s) can write to every module.`,'Use Access level to narrow scope where possible'),
+    chk('Security','Stale pending invites',staleInv?'warn':'good',`${staleInv} legacy invite${staleInv===1?'':'s'} older than 7 days.`),
+    chk('Security','Single owner',users.filter(u=>u.role==='owner').length<=1?'info':'warn',`${users.filter(u=>u.role==='owner').length||1} owner account(s). Keep exactly one; use editors for helpers.`),
+    chk('Security','Multi-factor authentication','info','Not enforced. Enable MFA in Supabase Auth → Providers if you want a second factor for owners.'),
+    chk('Backup','Last data export',lastExport?(daysSince(lastExport.created_at)>7?'warn':'good'):'crit',lastExport?`Last export ${ago(lastExport.created_at)}.`:'No export recorded yet.','Export / Import → Export workspace JSON (weekly recommended)'),
+    chk('Data hygiene','Tasks without a due date',S.tasks.some(x=>!x.due)?'warn':'good',`${S.tasks.filter(x=>!x.due).length} task(s) have no due date.`),
+    chk('Data hygiene','Overdue tasks > 7 days',S.tasks.some(x=>x.status!=='Complete'&&x.due&&diffDays(t,x.due)>7)?'crit':'good',`${S.tasks.filter(x=>x.status!=='Complete'&&x.due&&diffDays(t,x.due)>7).length} task(s) overdue more than a week.`),
+    chk('Data hygiene','Applications without a next action',S.apps.some(a=>a.status!=='Closed'&&!a.next)?'warn':'good',`${S.apps.filter(a=>a.status!=='Closed'&&!a.next).length} open application(s) missing a next action.`),
+    chk('Data hygiene','Applications silent > 14 days',S.apps.some(a=>a.status==='Active'&&a.stage==='Applied'&&a.applied&&diffDays(t,a.applied)>14)?'warn':'good',`${S.apps.filter(a=>a.status==='Active'&&a.stage==='Applied'&&a.applied&&diffDays(t,a.applied)>14).length} application(s) at "Applied" for over two weeks.`,'Follow up or mark Closed'),
+    chk('Data hygiene','Contacts without a follow-up date',[...S.recruiters.filter(r=>r.status!=='Closed'&&!r.next),...S.contacts.filter(c=>c.status!=='Dormant'&&!c.next)].length?'warn':'good',`${[...S.recruiters.filter(r=>r.status!=='Closed'&&!r.next),...S.contacts.filter(c=>c.status!=='Dormant'&&!c.next)].length} active recruiter/contact record(s) with no next follow-up.`),
+    chk('Data hygiene','Compliance logged this week',S.compliance.some(c=>c.week>=weekEnding(t))?'good':'crit',S.compliance.some(c=>c.week>=weekEnding(t))?'Current week is logged.':'No compliance row for the current week.','Compliance → Add week'),
+    chk('Momentum','Applications this week',apps7>=CFG.weeklyAppTarget?'good':apps7>=Math.ceil(CFG.weeklyAppTarget/2)?'warn':'crit',`${apps7} of ${CFG.weeklyAppTarget} target in the last 7 days.`),
+    chk('Momentum','Networking touches this week',net7>=CFG.weeklyNetworkTarget?'good':net7?'warn':'crit',`${net7} recruiter/contact touches of ${CFG.weeklyNetworkTarget} target.`),
+    chk('Momentum','Response rate',S.apps.length?(responded/S.apps.length>=0.3?'good':'warn'):'info',S.apps.length?`${Math.round(responded/S.apps.length*100)}% of applications moved past "Applied" (benchmark ≥ 30%).`:'No applications yet.'),
+    chk('Momentum','Interview conversion',S.apps.length?(S.interviews.length/S.apps.length>=0.2?'good':'warn'):'info',S.apps.length?`${S.interviews.length} interview(s) from ${S.apps.length} application(s) — ${Math.round(S.interviews.length/S.apps.length*100)}% (benchmark ≥ 20%).`:'No applications yet.'),
+    chk('Momentum','Follow-up discipline',overdueF?'warn':'good',`${overdueF} overdue follow-up(s) of ${followups.length} scheduled.`),
+    chk('Momentum','Interview readiness',S.interviews.some(i=>i.outcome==='Pending'&&i.date>=t&&readiness(i)<CFG.readyYellow)?'crit':'good',`${S.interviews.filter(i=>i.outcome==='Pending'&&i.date>=t&&readiness(i)<CFG.readyYellow).length} upcoming interview(s) below ${CFG.readyYellow}% readiness.`),
+    chk('Momentum','Active days (last 7)',activeDays>=5?'good':activeDays>=3?'warn':'crit',`${activeDays} day(s) with recorded activity in the last week (target 5+).`),
+  ];
+  return out;
+}
+const kpiCard=(l,v,c,s)=>`<div class="kpi ${c||'info'}"><div class="l">${l}</div><div class="v">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
+const isOnline=s=>s.active && (Date.now()-new Date(s.last_active))<15*60*1000;
+
+R.admin = el => {
+  const tabs=[['users','👥 Users'],['sessions','🟢 Live Sessions'],['analytics','📈 User Analytics'],['audit','🛡 Security Audit'],['exportimport','📦 Export / Import'],['activity','📋 Activity Log'],['settings','⚙ Settings']]
+    .filter(t=>isOwner()||['activity','settings','exportimport'].includes(t[0]));
+  if(!tabs.some(t=>t[0]===ADMIN_TAB)) ADMIN_TAB=tabs[0][0];
+  const tabBar=`<div class="slicers" style="margin-bottom:10px"><div class="slicer"><div class="opts">${tabs.map(t=>`<button data-atab="${t[0]}" class="${ADMIN_TAB===t[0]?'on':''}">${t[1]}</button>`).join('')}</div></div></div>`;
+  let body=''; const ro=!isOwner(); const me=USER?USER.id:'demo';
+
+  if(ADMIN_TAB==='users'){
+    const users=S.adminUsers;
+    const status=u=>u.banned_until&&new Date(u.banned_until)>new Date()?'<span class="pill crit">Disabled</span>':u.must_change_password?'<span class="pill warn">Temp password</span>':!u.last_sign_in_at?'<span class="pill idle">Never signed in</span>':'<span class="pill good">Active</span>';
+    const rows=(users||S.members||[]).map(u=>{ const id=u.user_id; const mine=id===me; const dis=u.banned_until&&new Date(u.banned_until)>new Date();
+      return `<tr><td><span class="avatar" style="width:26px;height:26px;font-size:11px;display:inline-grid;margin-right:8px;vertical-align:middle">${esc(((u.first_name||u.email||'?')[0]).toUpperCase())}</span><b>${esc(u.display_name||[u.first_name,u.last_name].filter(Boolean).join(' ')||u.email.split('@')[0])}</b>${mine?' <span class="pill info">you</span>':''}<div class="m" style="font-size:12px;color:var(--ink-3)">${esc(u.email||'')}</div></td>
+        <td><span class="role ${u.role}">${u.role}</span></td><td>${permBadges(u)}</td><td>${status(u)}${(()=>{const e=(S.events||[]).find(x=>x.event==='sign_in'&&x.user_email===u.email&&x.detail&&x.detail.version); return e?` <span class="pill ${LATEST&&cmpVer(e.detail.version,LATEST)<0?'warn':'idle'}" title="App version at last sign-in">v${esc(e.detail.version)}</span>`:'';})()}</td><td class="num">${u.last_sign_in_at?ago(u.last_sign_in_at):'—'}</td><td class="num">${u.joined||u.created_at?fmtD(String(u.joined||u.created_at).slice(0,10)):'—'}</td>
+        <td style="white-space:nowrap">${isOwner()&&MODE!=='demo'?`<button class="btn" data-edit="${id}" style="padding:2px 8px;font-size:12px">Edit</button> <button class="btn" data-kit="${id}" style="padding:2px 8px;font-size:12px" title="Onboarding kit: email draft, WhatsApp, copy">Kit</button>${u.phone?` <a class="btn wa" style="padding:2px 8px;font-size:12px" target="_blank" rel="noopener" href="${waLink(u.phone, waCredentialsText(u,null))}" title="WhatsApp ${esc(u.phone)}">💬</a>`:''} ${!mine?`<button class="btn" data-reset="${id}" style="padding:2px 8px;font-size:12px">Reset pw</button> <button class="btn" data-toggle="${id}" data-enabled="${dis?'true':'false'}" style="padding:2px 8px;font-size:12px">${dis?'Enable':'Disable'}</button> <button class="del" data-remove="${id}" title="Remove from workspace">✕</button>`:''}`:''}</td></tr>`; }).join('');
+    const mail=S.mailConfig;
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Members',(S.members||[]).length)}${kpiCard('Active',(users||[]).filter(u=>u.last_sign_in_at&&!(u.banned_until&&new Date(u.banned_until)>new Date())).length,'good')}${kpiCard('Pending first sign-in',(users||[]).filter(u=>u.must_change_password||!u.last_sign_in_at).length,(users||[]).some(u=>u.must_change_password||!u.last_sign_in_at)?'warn':'good')}${kpiCard('Email delivery',mail?(mail.email_configured?'On':'Off'):'…',mail&&mail.email_configured?'good':'warn',mail&&mail.email_configured?'temp passwords are emailed':'send the onboarding kit yourself')}</div>
+      <div class="card"><div class="tblhead"><h3 style="margin:0">Users <span class="hint">${(S.members||[]).length}${users?'':' · loading sign-in details…'}</span></h3>${isOwner()&&MODE!=='demo'?'<button class="btn primary" id="btnAddUser">+ Add user</button>':''}</div>
+        <div class="tblwrap"><table class="tbl"><thead><tr><th>Person</th><th>Role</th><th>Permissions</th><th>Status</th><th>Last sign-in</th><th>Joined</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">No members yet.</td></tr>'}</tbody></table></div>
+        <div class="legend" style="margin-top:10px;flex-direction:column;gap:4px">${L.roles.map(r=>`<span><span class="role ${r}">${r}</span> &nbsp;${ROLE_DESC[r]}</span>`).join('')}<span><span class="pill idle">scope</span> which module groups they can open · <span class="pill info">export</span> may download data · <span class="pill info">finance</span> Budget &amp; Cash Runway visible (workspace setting).</span></div>
+        <div class="note">How access works: <b>Add user</b> creates the account instantly with a temporary password, then shows an <b>onboarding kit</b> — a ready-to-send message with the app link, credentials and step-by-step sign-in instructions (copy it, open it in your email app, or send it through CareerShift when email delivery is configured). The user must choose their own password on first sign-in. <b>Kit</b> regenerates the message for any member at any time.</div></div>`;
+  }
+  if(ADMIN_TAB==='sessions'){
+    const ss=S.sessions||[]; const online=ss.filter(isOnline); const byUser={}; ss.forEach(s=>{ byUser[s.user_email]=byUser[s.user_email]||[]; byUser[s.user_email].push(s); });
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Online now',online.length,online.length?'good':'info','active in the last 15 min')}${kpiCard('Active sessions',ss.filter(s=>s.active).length)}${kpiCard('People with a session',Object.keys(byUser).length)}${kpiCard('Last refreshed',S.sessionsAt?ago(S.sessionsAt):'—','info')}</div>
+      <div class="card"><div class="tblhead"><h3 style="margin:0">Live sessions <span class="hint">server-side, from Supabase Auth</span></h3><button class="btn" id="refreshSessions">Refresh</button></div>
+      <div class="tblwrap"><table class="tbl"><thead><tr><th></th><th>Person</th><th>Last active</th><th>Session started</th><th>Device / browser</th><th>IP</th></tr></thead><tbody>${ss.map(s=>`<tr><td><span class="dot ${isOnline(s)?'good':s.active?'warn':''}"></span></td><td>${esc(s.user_email)}</td><td class="num">${ago(s.last_active)}</td><td class="num">${ago(s.session_started)}</td><td style="max-width:260px;overflow:hidden;text-overflow:ellipsis" title="${esc(s.user_agent||'')}">${esc((s.user_agent||'').replace(/Mozilla\/5.0 \(([^)]*)\).*?(Chrome|Safari|Firefox|Edg)\/([\d.]+).*/,'$2 $3 · $1').slice(0,60))}</td><td class="id">${esc(s.ip||'')}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No sessions.</td></tr>'}</tbody></table></div>
+      <div class="legend"><span><i style="background:var(--good)"></i>Online (active &lt; 15 min)</span><span><i style="background:var(--warn)"></i>Signed in, idle</span><span><i style="background:var(--idle)"></i>Expired</span></div></div>`;
+  }
+  if(ADMIN_TAB==='analytics'){
+    const ev=S.events||[], au=S.activity||[]; const since=new Date(Date.now()-14*DAY).toISOString();
+    const ev7=ev.filter(e=>e.created_at>new Date(Date.now()-7*DAY).toISOString()), au7=au.filter(a=>a.created_at>new Date(Date.now()-7*DAY).toISOString());
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Sign-ins (7d)',ev7.filter(e=>e.event==='sign_in').length)}${kpiCard('Active users (7d)',new Set([...ev7,...au7].map(x=>x.user_email)).size,'good')}${kpiCard('Data changes (7d)',au7.filter(a=>['insert','update','delete'].includes(a.action)).length)}${kpiCard('Module views (7d)',ev7.filter(e=>e.event==='view').length)}${kpiCard('Exports (7d)',ev7.filter(e=>/export/.test(e.event)).length)}</div>
+      <div class="grid g12"><div class="card span8"><h3>Activity per day <span class="hint">last 14 days</span></h3><div id="ua1" class="chart"></div></div><div class="card span4"><h3>Views by module</h3><div id="ua2" class="chart"></div></div>
+      <div class="card span6"><h3>Data changes by person</h3><div id="ua3" class="chart"></div></div><div class="card span6"><h3>Per-user summary</h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>Person</th><th style="text-align:right">Sign-ins</th><th style="text-align:right">Views</th><th style="text-align:right">Changes</th><th style="text-align:right">Exports</th><th>Last seen</th></tr></thead><tbody id="uaTable"></tbody></table></div></div></div>`;
+    setTimeout(()=>{
+      const days=[...Array(14)].map((_,i)=>addDays(T(),i-13));
+      const cnt=(arr,pred)=>days.map(d=>arr.filter(x=>String(x.created_at).slice(0,10)===d&&pred(x)).length);
+      Plotly.newPlot(el.querySelector('#ua1'),[{type:'bar',name:'Data changes',x:days.map(fmtD),y:cnt(au,a=>['insert','update','delete'].includes(a.action)),marker:{color:cssVar('--accent')}},{type:'bar',name:'Views',x:days.map(fmtD),y:cnt(ev,e=>e.event==='view'),marker:{color:cssVar('--good')}},{type:'bar',name:'Sign-ins',x:days.map(fmtD),y:cnt(ev,e=>e.event==='sign_in'),marker:{color:cssVar('--warn')}}],{...plotBase(),barmode:'stack',showlegend:true,legend:{orientation:'h',y:1.15},height:240},PCFG);
+      const vm={}; ev.filter(e=>e.event==='view').forEach(e=>{ const k=(e.detail&&e.detail.module)||'?'; vm[k]=(vm[k]||0)+1; }); const vk=Object.keys(vm).sort((a,b)=>vm[b]-vm[a]).slice(0,10);
+      Plotly.newPlot(el.querySelector('#ua2'),[{type:'bar',orientation:'h',y:vk.reverse(),x:vk.map(k=>vm[k]),marker:{color:cssVar('--accent')}}],{...plotBase(),height:240,margin:{l:90,r:10,t:6,b:30}},PCFG);
+      const pm={}; au.forEach(a=>{ if(['insert','update','delete'].includes(a.action)){ const k=(a.user_email||'?').split('@')[0]; pm[k]=(pm[k]||0)+1; } }); const pk=Object.keys(pm);
+      Plotly.newPlot(el.querySelector('#ua3'),[{type:'bar',x:pk,y:pk.map(k=>pm[k]),marker:{color:cssVar('--accent')}}],{...plotBase(),height:220},PCFG);
+      const by={}; ev.forEach(e=>{ const w=e.user_email||''; by[w]=by[w]||{s:0,v:0,c:0,x:0,last:null}; if(e.event==='sign_in') by[w].s++; if(e.event==='view') by[w].v++; if(/export/.test(e.event)) by[w].x++; if(!by[w].last||e.created_at>by[w].last) by[w].last=e.created_at; });
+      au.forEach(a=>{ const w=a.user_email||''; by[w]=by[w]||{s:0,v:0,c:0,x:0,last:null}; if(['insert','update','delete'].includes(a.action)) by[w].c++; if(!by[w].last||a.created_at>by[w].last) by[w].last=a.created_at; });
+      el.querySelector('#uaTable').innerHTML=Object.entries(by).map(([w,v])=>`<tr><td>${esc(w)}</td><td class="num">${v.s}</td><td class="num">${v.v}</td><td class="num">${v.c}</td><td class="num">${v.x}</td><td class="num">${v.last?ago(v.last):'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">No activity yet.</td></tr>';
+    },0);
+  }
+  if(ADMIN_TAB==='audit'){
+    const checks=healthChecks(); const groups=[...new Set(checks.map(c=>c.group))];
+    const counts={good:0,warn:0,crit:0,info:0}; checks.forEach(c=>counts[c.cls]++);
+    const users=S.adminUsers||[];
+    const caps=[['View shared modules',u=>true],['Edit shared modules',u=>u.role==='owner'||(u.role==='editor'&&!u.read_only)],['View finance',u=>u.role==='owner'||CFG.financeVisibility==='members'],['Edit finance',u=>u.role==='owner'||(u.role==='editor'&&!u.read_only&&CFG.financeVisibility==='members')],['Export data',u=>u.role==='owner'||u.can_export],['Manage users & settings',u=>u.role==='owner']];
+    const matrix=users.length?`<div class="card span12"><h3>Permission matrix <span class="hint">effective rights per member</span></h3><div class="tblwrap"><table class="tbl pivot"><thead><tr><th>Person</th><th>Scope</th>${caps.map(c=>`<th style="text-align:center">${c[0]}</th>`).join('')}</tr></thead><tbody>${users.map(u=>`<tr><td>${esc(u.display_name||u.email)} <span class="role ${u.role}">${u.role}</span></td><td>${u.modules&&u.modules.length?esc(u.modules.map(m=>MODULE_GROUPS[m].split(',')[0]).join(', ')):'all'}</td>${caps.map(c=>`<td style="text-align:center">${c[1](u)?'<span class="dot good"></span>':'<span class="dot"></span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`:'';
+    body=`<div class="kpis" style="margin-bottom:16px">${kpiCard('Passing',counts.good,'good')}${kpiCard('Watch',counts.warn,'warn')}${kpiCard('Critical',counts.crit,'crit')}${kpiCard('Informational',counts.info,'info')}</div>
+      <div class="grid g12">${matrix}${groups.map(g=>`<div class="card span6"><h3>${g}</h3><ul class="alist">${checks.filter(c=>c.group===g).map(c=>`<li><span class="dot ${c.cls==='info'?'':c.cls}"></span><span><span class="t">${esc(c.name)}</span><div class="m">${esc(c.detail)}${c.fix?` <span style="color:var(--accent)">→ ${esc(c.fix)}</span>`:''}</div></span><span class="pill ${c.cls==='info'?'info':c.cls}">${c.cls==='good'?'OK':c.cls==='warn'?'Watch':c.cls==='crit'?'Critical':'Info'}</span></li>`).join('')}</ul></div>`).join('')}</div>`;
+  }
+  if(ADMIN_TAB==='exportimport'){
+    const lastExport=(S.events||[]).find(e=>/export/.test(e.event));
+    body=`<div class="grid g12">
+      <div class="card span6"><h3>Export</h3>${canExport()?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="exportJson">Workspace JSON (full backup)</button><button class="btn" id="exportCsvAll">All modules (CSV)</button><button class="btn" id="exportLog2">Activity log (CSV)</button></div><div class="note">Last export: ${lastExport?ago(lastExport.created_at):'never'}. Exports include only the modules in your scope${financeVisible()?' plus finance':''}. Every export is recorded in the activity log.</div>`:'<div class="msg info">You are not authorized to export data. Ask the workspace owner to grant export rights (Users → Edit → Authorize data export).</div>'}</div>
+      <div class="card span6"><h3>Import</h3>${canEdit()?`<div class="field"><label for="impFile">Restore from a CareerShift JSON export (rows are added, never overwritten)</label><input id="impFile" type="file" accept="application/json,.json"></div><div id="impResult"></div><div class="note">Accepted keys: tasks, applications, interviews, recruiters, contacts, compliance, expenses, cash. IDs are regenerated. Import is limited to your scope and permissions.</div>`:'<div class="msg info">Read-only access — import is not available.</div>'}</div>
+      ${isOwner()&&MODE!=='demo'?`<div class="card span12" style="border-color:var(--crit)"><h3 style="color:var(--crit)">Danger zone</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn danger" id="clearData">Clear all module data</button><button class="btn danger" id="deleteWs">Delete workspace</button></div><div class="note">Both actions are permanent. Export first.</div></div>`:''}
+    </div>`;
+  }
+  if(ADMIN_TAB==='activity'){
+    const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email||'system',kind:['insert','update','delete'].includes(a.action)?'data':'access',what:`${a.action.replace(/_/g,' ')} ${a.table_name.replace(/_/g,' ')}${a.record_id&&a.record_id.length<12?' '+a.record_id:''}`,detail:a.summary||''}));
+    const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email||'',kind:e.event.startsWith('admin_')?'access':'session',what:e.event.replace(/_/g,' '),detail:e.detail&&Object.keys(e.detail).length?Object.entries(e.detail).filter(([k])=>k!=='mail_error').map(([k,v])=>`${k}: ${Array.isArray(v)?v.join('+'):v}`).join(' · '):''}));
+    const all=[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when));
+    SL.activity=SL.activity||{};
+    const defs=[{k:'kind',label:'Type',opts:['data','access','session']},{k:'who',label:'Person'}];
+    const {rows}=applySlicers('activity',defs,all);
+    const q=(SL.activity._q||'').toLowerCase();
+    const shown=rows.filter(r=>!q||(r.what+' '+r.detail+' '+r.who).toLowerCase().includes(q)).slice(0,400);
+    body=`<div class="grid g12"><div class="card span12"><h3>Detailed log <span class="hint">${all.length} entries · data changes, access changes, sessions & usage${isOwner()?'':' · your activity only'}</span></h3>
+        ${slicerHTML('activity',defs,all)}
+        <div class="inline-form"><div class="field"><label for="actQ">Search</label><input id="actQ" type="search" value="${esc(SL.activity._q||'')}" placeholder="task, company, person, action…"></div>${canExport()?'<button class="btn" id="exportLog" style="height:38px">Export log (CSV)</button>':''}</div>
+        <div class="tblwrap"><table class="tbl"><thead><tr><th>When</th><th>Person</th><th>Type</th><th>Event</th><th>Detail</th></tr></thead><tbody>${shown.map(r=>`<tr><td class="num" title="${esc(r.when)}">${ago(r.when)}</td><td>${esc(r.who.split('@')[0])}</td><td><span class="pill ${r.kind==='data'?'info':r.kind==='access'?'warn':'idle'}">${r.kind}</span></td><td>${esc(r.what)}</td><td style="white-space:normal;max-width:520px">${esc(r.detail)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nothing matches.</td></tr>'}</tbody></table></div></div></div>`;
+  }
+  if(ADMIN_TAB==='settings'){
+    const f=(id,label,val,type='number',extra='')=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" ${ro?'disabled':''} ${extra}></div>`;
+    body=`<div class="grid g12">
+      <div class="card span6"><h3>Workspace</h3>
+        ${f('setName','Workspace name',S.settings.name||'','text')}
+        ${f('setSep','Separation date',S.settings.separationDate||'','date')}
+        ${f('setReq','Weekly work-search requirement (unemployment compliance)',S.settings.weeklyRequirement,'number','min="1"')}
+        ${f('setUrl','App link (used in onboarding messages and emails)',CFG.appUrl||'','url',`placeholder="${esc(location.href.split('#')[0])}"`)}
+        <div class="field"><label for="setFin">Finance visibility (Budget & Cash Runway)</label><select id="setFin" ${ro?'disabled':''}><option value="owner" ${CFG.financeVisibility==='owner'?'selected':''}>Owner only</option><option value="members" ${CFG.financeVisibility==='members'?'selected':''}>All members (editors can edit)</option></select></div>
+        <div class="note">Finance visibility is enforced in the database (row-level security), so hidden really means hidden.</div></div>
+      <div class="card span6"><h3>Thresholds & indicators</h3>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:0 14px">
+        ${f('thrReadyG','Readiness green ≥ %',CFG.readyGreen)}${f('thrReadyY','Readiness yellow ≥ %',CFG.readyYellow)}
+        ${f('thrRunG','Runway green ≥ months',CFG.runwayGreen)}${f('thrRunY','Runway yellow ≥ months',CFG.runwayYellow)}
+        ${f('thrSoon','"Due soon" window (days)',CFG.dueSoonDays)}${f('thrFollow','Follow-up window (days)',CFG.followWindowDays)}
+        ${f('thrBudget','Budget critical overrun %',CFG.budgetCritPct)}${f('thrApps','Weekly application target',CFG.weeklyAppTarget)}
+        ${f('thrNet','Weekly networking target',CFG.weeklyNetworkTarget)}</div>
+        ${ro?'':'<button class="btn primary" id="saveSettings">Save settings</button>'}</div>
+      <div class="card span12"><h3>Dropdown lists <span class="hint">one value per line; blank = default</span></h3>
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${Object.keys(LIST_LABELS).map(k=>`<div class="field"><label for="list-${k}">${LIST_LABELS[k]}</label><textarea id="list-${k}" data-list="${k}" rows="5" ${ro?'disabled':''} style="border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--surface-2);font-size:12.5px;resize:vertical">${esc((CFG.lists[k]&&CFG.lists[k].length?CFG.lists[k]:BASE_L[k]).join('\n'))}</textarea></div>`).join('')}</div>
+        ${ro?'':'<button class="btn primary" id="saveLists">Save lists</button> <button class="btn" id="resetLists">Restore defaults</button>'}</div>
+      ${!ro && S.tasks.length+S.apps.length===0?'<div class="card span12"><h3>Sample data</h3><button class="btn" id="loadSample2">Load 3 rows per module</button></div>':''}
+      <div class="card span12"><h3>About <span class="hint">version & build</span></h3><div class="kit-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><div class="kv"><span>This copy</span><code>v${APP_VERSION}</code></div><div class="kv"><span>Build</span><code>${APP_BUILD}</code></div><div class="kv"><span>Latest released</span><code>${LATEST?'v'+LATEST:'—'}</code></div><div class="kv"><span>Status</span><code>${!LATEST?'unknown':cmpVer(APP_VERSION,LATEST)<0?'OUTDATED':'up to date'}</code></div></div><button class="btn" id="btnAbout2" style="margin-top:10px">Release notes</button></div>
+    </div>`;
+  }
+  el.innerHTML=tabBar+body;
+  el.querySelectorAll('[data-atab]').forEach(b=>b.addEventListener('click',()=>{ ADMIN_TAB=b.dataset.atab; logEvent('view',{module:'admin',tab:ADMIN_TAB}); render(); }));
+  if(['users','audit','sessions','analytics'].includes(ADMIN_TAB)&&isOwner()&&!S.adminUsers) guarded(async()=>{ await db.loadAdmin(); render(); });
+  const on=(id,fn)=>{ const x=el.querySelector('#'+id); if(x) x.addEventListener('click',fn); };
+  // ----- settings -----
+  on('saveSettings',()=>guarded(async()=>{
+    const num=id=>+el.querySelector('#'+id).value;
+    await db.saveSettings({readyGreen:num('thrReadyG'),readyYellow:num('thrReadyY'),runwayGreen:num('thrRunG'),runwayYellow:num('thrRunY'),dueSoonDays:num('thrSoon'),followWindowDays:num('thrFollow'),budgetCritPct:num('thrBudget'),weeklyAppTarget:num('thrApps'),weeklyNetworkTarget:num('thrNet'),financeVisibility:el.querySelector('#setFin').value,appUrl:el.querySelector('#setUrl').value.trim()});
+    const name=el.querySelector('#setName').value.trim(); if(name && name!==S.settings.name) await db.rename(name);
+    await db.updateSettings({separationDate:el.querySelector('#setSep').value||S.settings.separationDate, weeklyRequirement:Math.max(1,num('setReq')||1)});
+    logEvent('settings_change'); await refresh();
+  },'Settings saved'));
+  on('saveLists',()=>guarded(async()=>{ const lists={}; el.querySelectorAll('[data-list]').forEach(t=>{ const v=t.value.split('\n').map(s=>s.trim()).filter(Boolean); if(v.length && v.join('|')!==BASE_L[t.dataset.list].join('|')) lists[t.dataset.list]=v; }); await db.saveSettings({lists}); logEvent('settings_change',{lists:Object.keys(lists)}); render(); },'Lists saved'));
+  on('resetLists',()=>guarded(async()=>{ await db.saveSettings({lists:{}}); render(); },'Default lists restored'));
+  on('loadSample2',()=>guarded(async()=>{ await db.loadSample(); await refresh(); },'Sample data loaded'));
+  on('btnAbout2',aboutModal);
+  // ----- export / import -----
+  on('exportJson',()=>{ if(!canExport()) return toast('Not authorized'); const out={workspace:S.settings,settings:CFG,tasks:S.tasks,applications:S.apps,interviews:S.interviews,recruiters:S.recruiters,contacts:S.contacts,compliance:S.compliance,expenses:financeVisible()?S.expenses:undefined,cash:financeVisible()?S.cash:undefined,exported_at:new Date().toISOString()};
+    const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(out,null,2)); a.download=`careershift-${T()}.json`; document.body.appendChild(a); a.click(); a.remove(); logEvent('export_json',{rows:S.tasks.length+S.apps.length}); toast('Workspace exported'); setTimeout(()=>refresh(),800); });
+  on('exportCsvAll',()=>{ for(const c of ['tasks','apps','interviews','recruiters','contacts','compliance']) csvDownload(`careershift-${c}-${T()}.csv`, S[c]); setTimeout(()=>refresh(),800); });
+  const exportLog=()=>{ const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email,type:'data/access',event:a.action,table:a.table_name,record:a.record_id,detail:a.summary})); const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email,type:'session',event:e.event,table:'',record:'',detail:JSON.stringify(e.detail)})); csvDownload(`careershift-activity-${T()}.csv`,[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when))); };
+  on('exportLog',exportLog); on('exportLog2',exportLog);
+  const imp=el.querySelector('#impFile'); if(imp) imp.addEventListener('change',()=>{ const f=imp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>guarded(async()=>{ const obj=JSON.parse(rd.result); const counts=await db.importJson(obj); await refresh(); const box=document.querySelector('#impResult'); if(box) box.innerHTML=`<div class="msg ok">Imported: ${Object.entries(counts).map(([k,v])=>`${v} ${k}`).join(', ')||'nothing recognised'}.</div>`; },'Import complete'); rd.readAsText(f); });
+  on('clearData',()=>{ if(!confirm('Delete every task, application, interview, recruiter, contact, compliance week and expense in this workspace? Members and settings are kept.')) return; guarded(async()=>{ await db.clearModules(); logEvent('clear_data'); await refresh(); },'Module data cleared'); });
+  on('deleteWs',()=>{ if(prompt('Type DELETE to permanently remove this workspace and all its data.')!=='DELETE') return; guarded(async()=>{ await db.deleteWorkspace(); toast('Workspace deleted'); WS=null; S=null; try{localStorage.removeItem('careershift.ws');}catch(e){} enterApp(); }); });
+  // ----- users -----
+  on('btnAddUser',()=>userModal(null));
+  const findU=id=>(S.adminUsers||S.members||[]).find(x=>x.user_id===id);
+  el.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>userModal(findU(b.dataset.edit))));
+  el.querySelectorAll('[data-kit]').forEach(b=>b.addEventListener('click',()=>kitModal(findU(b.dataset.kit),null,null)));
+  el.querySelectorAll('[data-reset]').forEach(b=>b.addEventListener('click',()=>resetModal(findU(b.dataset.reset))));
+  el.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{ if(!confirm('Remove this member from the workspace? Their account stays but loses access.')) return; guarded(async()=>{ const {error}=await sb.from('workspace_members').delete().eq('workspace_id',WS.id).eq('user_id',b.dataset.remove); if(error) throw error; S.adminUsers=null; await refresh(); await db.loadAdmin(); render(); },'Member removed'); }));
+  el.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.admin({action:'set_enabled',user_id:b.dataset.toggle,enabled:b.dataset.enabled}); S.adminUsers=null; await db.loadAdmin(); render(); },'Account updated')));
+  on('refreshSessions',()=>guarded(async()=>{ await db.loadAdmin(); render(); },'Sessions refreshed'));
+  // ----- activity -----
+  const q=el.querySelector('#actQ'); if(q) q.addEventListener('input',()=>{ SL.activity._q=q.value; const pos=q.selectionStart; render(); const nq=document.querySelector('#actQ'); if(nq){ nq.focus(); nq.setSelectionRange(pos,pos);} });
+};
+
+/* ===================== Render ===================== */
+function render(keepFocus){
+  if(!S) return;
+  const v=VIEWS.find(x=>x.id===current) || VIEWS[1];
+  if((v.finance && !financeVisible()) || !moduleOk(v.group)){ current='exec'; return render(); }
+  document.getElementById('pageTitle').textContent=v.title; document.getElementById('pageSub').textContent=v.sub;
+  document.getElementById('asofDate').textContent=parse(T()).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('daySince').textContent=S.settings.separationDate? diffDays(T(),S.settings.separationDate):'—';
+  document.getElementById('wsName').textContent = MODE==='demo'? 'Offline demo' : (WS? WS.name : 'Workspace');
+  document.getElementById('whoami').textContent = MODE==='demo'? 'demo' : (USER? USER.email : '');
+  document.getElementById('avatar').textContent = (MODE==='demo'? 'D' : (USER? USER.email[0] : '?')).toUpperCase();
+  const mr=document.getElementById('myRole'); mr.textContent=ROLE; mr.className='role '+ROLE;
+  document.getElementById('appShell').classList.toggle('ro', !canEdit()); document.getElementById('view').classList.remove('ro');
+  const bn=document.getElementById('banner');
+  const outdated = LATEST && cmpVer(APP_VERSION,LATEST)<0 ? `<div class="banner" style="background:var(--crit-soft);color:var(--crit);border-color:var(--crit)">This copy is <b>v${APP_VERSION}</b> but the latest release is <b>v${LATEST}</b> — replace <code>index.html</code> on your host with the newest CareerShift.html. <button class="btn" id="btnAbout" style="padding:3px 9px;font-size:12px">Release notes</button></div>` : '';
+  bn.innerHTML = outdated + (MODE==='demo'? `<div class="banner">Offline demo — data is stored only in this browser. <button class="btn" id="btnResetDemo" style="padding:3px 9px;font-size:12px">Reset sample data</button><button class="btn" id="btnExitDemo" style="padding:3px 9px;font-size:12px">Sign in to a real workspace</button></div>`
+    : (!canEdit()? `<div class="banner info">You have <b>${ROLE}${ME.read_only?' (read-only)':''}</b> access — everything is read-only.</div>` : (S.tasks.length+S.apps.length===0 && isOwner()? `<div class="banner info">Empty workspace. <button class="btn" id="btnSample" style="padding:3px 9px;font-size:12px">Load sample data (3 rows per module)</button> or start adding your own.</div>`:'')));
+  bn.querySelector('#btnAbout')?.addEventListener('click',aboutModal);
+  bn.querySelector('#btnResetDemo')?.addEventListener('click',()=>{ S=demoSeed(); demoSave(); applySettings({}); render(); toast('Sample data restored'); });
+  bn.querySelector('#btnExitDemo')?.addEventListener('click',()=>{ MODE='db'; S=null; showAuth(); });
+  bn.querySelector('#btnSample')?.addEventListener('click',()=>guarded(async()=>{ await db.loadSample(); await refresh(); },'Sample data loaded'));
+  renderNav();
+  const el=document.getElementById('view');
+  const active=document.activeElement, aid=active&&active.id, ak=active&&active.dataset&&(active.dataset.id+'|'+active.dataset.k);
+  R[current](el);
+  if(keepFocus){ let n=aid&&document.getElementById(aid); if(!n&&ak){ n=[...el.querySelectorAll('[data-id]')].find(x=>x.dataset.id+'|'+x.dataset.k===ak); } if(n) n.focus({preventScroll:true}); }
+}
+async function refresh(keepFocus){ try{ await db.loadAll(); render(keepFocus); }catch(e){ console.error(e); toast('Could not load: '+(e.message||e)); } }
+
+/* ===================== Auth & workspace flow ===================== */
+const authBody=()=>document.getElementById('authBody');
+function showAuth(mode='signin', msg){
+  document.getElementById('appShell').hidden=true; document.getElementById('authScreen').hidden=false;
+  const m = msg? `<div class="msg ${msg.cls||'info'}">${esc(msg.text)}</div>`:'';
+  if(mode==='signin') authBody().innerHTML=`<h2>Sign in</h2><form id="fSignin"><div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div><button class="btn primary block" type="submit">Sign in</button></form>${m}<div class="links"><button id="lnkSignup">Create account</button><button id="lnkForgot">Forgot password?</button></div>`;
+  if(mode==='signup') authBody().innerHTML=`<h2>Create account</h2><form id="fSignup"><div class="field"><label for="email">Email (use the address you were invited with)</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="pw">Password (8+ characters)</label><input id="pw" type="password" autocomplete="new-password" minlength="8" required></div><button class="btn primary block" type="submit">Create account</button></form>${m}<div class="links"><button id="lnkSignin">Back to sign in</button></div>`;
+  if(mode==='forgot') authBody().innerHTML=`<h2>Reset password</h2><form id="fForgot"><div class="field"><label for="email">Email</label><input id="email" type="email" required></div><button class="btn primary block" type="submit">Send reset link</button></form>${m}<div class="links"><button id="lnkSignin">Back to sign in</button></div>`;
+  if(mode==='recover') authBody().innerHTML=`<h2>Choose a new password</h2><form id="fRecover"><div class="field"><label for="pw">New password</label><input id="pw" type="password" minlength="8" required></div><button class="btn primary block" type="submit">Update password</button></form>${m}`;
+  if(mode==='workspace') authBody().innerHTML=`<h2>Set up your workspace</h2><p class="note" style="margin-top:0">You're signed in as <b>${esc(USER.email)}</b> but aren't a member of any workspace yet. Create your own, or wait for an invite from someone who has one.</p><form id="fWs"><div class="field"><label for="wsn">Workspace name</label><input id="wsn" value="My job search" required></div><div class="field"><label for="sep">Separation date</label><input id="sep" type="date" value="${T()}"></div><label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:12px"><input type="checkbox" id="withSample" checked> Load 3 rows of sample data per module</label><button class="btn primary block" type="submit">Create workspace</button></form>${m}<div class="links"><button id="lnkCheck">I was invited — check again</button><button id="lnkOut">Sign out</button></div>`;
+  if(mode==='setpw') authBody().innerHTML=`<h2>Choose your password</h2><p class="note" style="margin-top:0">You signed in with a temporary password. Pick your own to continue.</p><form id="fSetPw"><div class="field"><label for="pw">New password (8+ characters)</label><input id="pw" type="password" minlength="8" autocomplete="new-password" required></div><div class="field"><label for="pw2">Repeat password</label><input id="pw2" type="password" minlength="8" required></div><button class="btn primary block" type="submit">Save and continue</button></form>${m}<div class="links"><button id="lnkOut">Sign out</button></div>`;
+  if(mode==='confirm') authBody().innerHTML=`<h2>Check your email</h2><div class="msg ok">We sent a confirmation link to <b>${esc(msg&&msg.email||'your address')}</b>. Open it, then come back and sign in.</div><div class="links"><button id="lnkSignin">Back to sign in</button></div>`;
+  eyeAll(authBody());
+  const on=(id,fn)=>{ const x=authBody().querySelector(id); if(x) x.addEventListener(id.startsWith('#f')?'submit':'click',e=>{e.preventDefault();fn();}); };
+  on('#lnkSignup',()=>showAuth('signup')); on('#lnkSignin',()=>showAuth('signin')); on('#lnkForgot',()=>showAuth('forgot')); on('#lnkOut',()=>sb.auth.signOut());
+  on('#lnkCheck',()=>enterApp());
+  on('#fSignin',async()=>{ const {error}=await sb.auth.signInWithPassword({email:val('#email'),password:val('#pw')}); if(error) showAuth('signin',{cls:'err',text:/fetch/i.test(error.message)?'Cannot reach the CareerShift database from here. Open this file from your computer or a web host (not a sandboxed preview). The offline demo below still works.':error.message}); else enterApp(); });
+  on('#fSignup',async()=>{ const email=val('#email'); const {data,error}=await sb.auth.signUp({email,password:val('#pw'),options:{emailRedirectTo:location.href.split('#')[0]}}); if(error) return showAuth('signup',{cls:'err',text:error.message}); if(!data.session) showAuth('confirm',{email}); else enterApp(); });
+  on('#fForgot',async()=>{ const {error}=await sb.auth.resetPasswordForEmail(val('#email'),{redirectTo:location.href.split('#')[0]}); showAuth('forgot',error?{cls:'err',text:error.message}:{cls:'ok',text:'If that address has an account, a reset link is on its way.'}); });
+  on('#fSetPw',async()=>{ if(val('#pw')!==val('#pw2')) return showAuth('setpw',{cls:'err',text:'Passwords do not match'}); const {error}=await sb.auth.updateUser({password:val('#pw'),data:{must_change_password:false}}); if(error) return showAuth('setpw',{cls:'err',text:error.message}); toast('Password set'); logEvent('password_set'); enterApp(); });
+  on('#fRecover',async()=>{ const {error}=await sb.auth.updateUser({password:val('#pw')}); if(error) return showAuth('recover',{cls:'err',text:error.message}); toast('Password updated'); enterApp(); });
+  on('#fWs',async()=>{ try{ const {data,error}=await sb.rpc('create_workspace',{p_name:val('#wsn'),p_separation:val('#sep')||null}); if(error) throw error; await enterApp(data, authBody().querySelector('#withSample').checked); }catch(e){ showAuth('workspace',{cls:'err',text:e.message}); } });
+}
+const val=sel=>authBody().querySelector(sel).value.trim();
+/* password reveal toggle: wraps any password input in a row with an eye button */
+function addEye(input){
+  if(!input || input.dataset.eye) return; input.dataset.eye='1';
+  const row=document.createElement('div'); row.className='pwrow'; input.parentNode.insertBefore(row,input); row.appendChild(input);
+  const btn=document.createElement('button'); btn.type='button'; btn.className='btn eye'; btn.title='Show password'; btn.setAttribute('aria-label','Show password'); btn.setAttribute('aria-pressed','false');
+  btn.innerHTML=EYE_ON;
+  btn.addEventListener('click',()=>{ const show=input.type==='password'; input.type=show?'text':'password'; btn.innerHTML=show?EYE_OFF:EYE_ON; btn.title=btn.ariaLabel=show?'Hide password':'Show password'; btn.setAttribute('aria-pressed',String(show)); input.focus({preventScroll:true}); });
+  row.appendChild(btn);
+}
+const EYE_ON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.8 21.8 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-3.17 4.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>';
+const eyeAll=root=>(root||document).querySelectorAll('input[type=password]').forEach(addEye);
+
+let rtChannel=null, rtTimer=null;
+function subscribeRealtime(){
+  if(rtChannel){ sb.removeChannel(rtChannel); rtChannel=null; }
+  rtChannel = sb.channel('ws-'+WS.id);
+  ['tasks','applications','interviews','recruiters','contacts','compliance_weeks','expenses','cash_inputs','workspace_members','activity_log'].forEach(t=>{
+    rtChannel.on('postgres_changes',{event:'*',schema:'public',table:t,filter:`workspace_id=eq.${WS.id}`},()=>{ clearTimeout(rtTimer); rtTimer=setTimeout(()=>refresh(true),350); });
+  });
+  rtChannel.subscribe(status=>{ const s=document.getElementById('syncState'); if(s) s.className='sync'+(status==='SUBSCRIBED'?'':' off'); });
+}
+async function enterApp(preferWs, withSample){
+  const {data:{user}} = await sb.auth.getUser(); USER=user;
+  if(!USER) return showAuth('signin');
+  if(USER.user_metadata && USER.user_metadata.must_change_password) return showAuth('setpw');
+  try{ await sb.rpc('accept_pending_invites'); }catch(e){ console.warn(e); }
+  const {data:mems,error} = await sb.from('workspace_members').select('workspace_id, role, can_export, read_only, modules, first_name, last_name, display_name, workspaces(id,name,separation_date,weekly_requirement,owner_id,settings)').eq('user_id',USER.id).order('created_at');
+  if(error){ return showAuth('signin',{cls:'err',text:error.message}); }
+  if(!mems || !mems.length) return showAuth('workspace');
+  let pick = mems.find(m=>m.workspace_id===preferWs) || mems.find(m=>m.role==='owner') || mems[0];
+  try{ const saved=localStorage.getItem('careershift.ws'); const s2=mems.find(m=>m.workspace_id===saved); if(!preferWs && s2) pick=s2; }catch(e){}
+  try{ const {data:meta}=await sb.from('app_meta').select('key,value'); if(meta){ const m=Object.fromEntries(meta.map(x=>[x.key,x.value])); LATEST=m.latest_version||null; S=S||{}; S.changelog=m.changelog||''; } }catch(e){}
+  const firstEntry = !WS;
+  WS = pick.workspaces; ROLE = pick.role; ME = {can_export:pick.can_export, read_only:pick.read_only, modules:pick.modules, first_name:pick.first_name, last_name:pick.last_name, display_name:pick.display_name}; applySettings(WS.settings);
+  try{ localStorage.setItem('careershift.ws', WS.id); }catch(e){}
+  if(firstEntry) logEvent('sign_in',{role:ROLE,version:APP_VERSION,build:APP_BUILD});
+  stampVersion();
+  if(withSample){ try{ await db.loadSample(); }catch(e){ console.error(e); toast('Sample data failed: '+e.message); } }
+  document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false;
+  await refresh(); subscribeRealtime();
+  // workspace switcher when a member of several
+  if(mems.length>1){
+    const sw=document.createElement('select'); sw.className='btn'; sw.id='wsSwitch';
+    mems.forEach(m=>{ const o=document.createElement('option'); o.value=m.workspace_id; o.textContent=m.workspaces.name+' ('+m.role+')'; o.selected=m.workspace_id===WS.id; sw.appendChild(o); });
+    sw.addEventListener('change',()=>enterApp(sw.value));
+    const old=document.getElementById('wsSwitch'); if(old) old.remove();
+    document.querySelector('.asof').prepend(sw);
+  }
+}
+
+/* ===================== Boot ===================== */
+document.getElementById('btnSignOut').addEventListener('click',async()=>{ if(MODE==='demo'){ MODE='db'; S=null; showAuth(); return; } logEvent('sign_out'); await new Promise(r=>setTimeout(r,250)); await sb.auth.signOut(); });
+document.getElementById('btnDemo').addEventListener('click',async()=>{ MODE='demo'; ROLE='owner'; ME={}; USER=null; WS=null; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true}); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render(); });
+try{ const mq=matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change',()=>render()); new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']}); }catch(e){}
+function stampVersion(){
+  const t=versionLabel();
+  const rv=document.getElementById('railVersion'); if(rv){ rv.innerHTML=`${APP_NAME} <b>v${APP_VERSION}</b><br><span>build ${APP_BUILD}</span>${LATEST&&cmpVer(APP_VERSION,LATEST)<0?`<br><span class="pill crit" style="margin-top:4px">update available: v${LATEST}</span>`:''}`; rv.onclick=aboutModal; }
+  const av=document.getElementById('authVersion'); if(av) av.textContent=t;
+  document.title=`${APP_NAME} v${APP_VERSION}`;
+  console.info(`%c${APP_NAME} ${t}`,'color:#2a78d6;font-weight:bold');
+}
+function aboutModal(){
+  const cl=(S&&S.changelog)||'';
+  openModal(`<div class="mhead"><b>About ${APP_NAME}</b><button class="mclose" id="aClose">×</button></div><div class="mbody">
+    <div class="kit-grid"><div class="kv"><span>This copy</span><code>v${APP_VERSION}</code></div><div class="kv"><span>Build</span><code>${APP_BUILD}</code></div><div class="kv"><span>Latest released</span><code>${LATEST?'v'+LATEST:'—'}</code></div><div class="kv"><span>Status</span><code>${!LATEST?'unknown (offline)':cmpVer(APP_VERSION,LATEST)<0?'OUTDATED — replace index.html on your host':cmpVer(APP_VERSION,LATEST)>0?'newer than registry':'up to date'}</code></div>
+    <div class="kv"><span>Backend</span><code>${SUPABASE_URL.replace('https://','')}</code></div><div class="kv"><span>Admin function</span><code>admin-users ${S&&S.mailConfig&&S.mailConfig.fn_version?'v'+S.mailConfig.fn_version:''}</code></div></div>
+    <h3 style="font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:6px 0">Release notes</h3>
+    <ul class="alist" style="font-size:13px">${cl.split('|').map(x=>x.trim()).filter(Boolean).map(x=>`<li><span class="pill ${x.startsWith(APP_VERSION)?'info':'idle'}">${esc(x.split(' ')[0])}</span><span>${esc(x.slice(x.indexOf(' ')+1))}</span><span></span></li>`).join('')||'<li class="empty">Release notes load after sign-in.</li>'}</ul>
+    <div class="mfoot"><button class="btn" id="aDone">Close</button></div></div>`);
+  document.getElementById('aClose').onclick=document.getElementById('aDone').onclick=closeModal;
+}
+(async function boot(){
+  stampVersion();
+  if(!window.supabase){ showAuth('signin',{cls:'err',text:'Could not load the Supabase client — this page must be opened from a normal web host or local file, not inside a sandboxed preview. The offline demo below still works.'}); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(event==='PASSWORD_RECOVERY') return showAuth('recover');
+    if(event==='SIGNED_OUT'){ USER=null; WS=null; S=null; if(rtChannel){ sb.removeChannel(rtChannel); rtChannel=null; } showAuth('signin',{cls:'ok',text:'Signed out.'}); }
+  });
+  if(/claude(usercontent)?\.(ai|com)$/.test(location.hostname)){ // hosted preview cannot reach Supabase (CSP) — run the offline demo
+    MODE='demo'; ROLE='owner'; ME={}; await db.loadAll(); logEvent('sign_in',{role:'owner',demo:true,version:APP_VERSION}); stampVersion(); document.getElementById('authScreen').hidden=true; document.getElementById('appShell').hidden=false; render();
+    document.getElementById('banner').insertAdjacentHTML('afterbegin','<div class="banner info">Preview copy — this page runs the offline demo. Download <b>CareerShift.html</b> and open or host it to sign in and collaborate with your team.</div>'); return; }
+  const {data:{session}} = await sb.auth.getSession();
+  if(session) enterApp(); else showAuth('signin');
+})();
+</script>
+</body></html>
