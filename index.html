@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="application-name" content="CareerShift"><meta name="version" content="1.7.3"><meta name="build" content="20260912.2300-da5b8df"><title>CareerShift</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="application-name" content="CareerShift"><meta name="version" content="1.9.0"><meta name="build" content="20260913.2132-111630c"><title>CareerShift</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232a78d6'/%3E%3Cpath d='M14 46h13V33h13V20h10' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M43 12l8 8-8 8' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.3/plotly.min.js"></script>
@@ -114,6 +114,31 @@ button,input,select,textarea{font:inherit;color:inherit}
 .slicer button:hover:not(.on){border-color:var(--accent)}
 /* tables */
 .tblwrap{overflow-x:auto}
+.tp-add{display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;margin:4px 0 10px}
+.tp-add input,.tp-add select{border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+.tp-add .tp-new{min-width:0}
+.tp-summary{display:flex;gap:14px;font-size:12px;color:var(--ink-3);margin-bottom:6px;flex-wrap:wrap} .tp-summary a{color:var(--accent)}
+.tp-list{list-style:none;margin:0;padding:0}
+.tp-row{display:grid;grid-template-columns:auto 1fr 140px 110px 130px auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-2)}
+.tp-row:last-child{border-bottom:0} .tp-row.done .tp-text{text-decoration:line-through;color:var(--ink-3)}
+.tp-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--good);margin:0 4px}
+.tp-main{min-width:0} .tp-text{width:100%;border:1px solid transparent;background:transparent;border-radius:4px;padding:3px 6px;font:inherit;font-size:13.5px;color:var(--ink)} .tp-text:hover{border-color:var(--line)} .tp-text:focus{background:var(--surface-2);border-color:var(--accent);outline:none}
+.tp-meta{display:flex;gap:8px;align-items:center;padding-left:6px;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap} .tp-cat{text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;font-weight:600} .tp-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.tp-due,.tp-sel{border:1px solid transparent;background:transparent;border-radius:4px;padding:4px 6px;font:inherit;font-size:12.5px;color:var(--ink)} .tp-due{font-family:var(--mono)} .tp-due:hover,.tp-sel:hover{border-color:var(--line)}
+.tp-list .empty{padding:14px 6px}
+@media (max-width:900px){.tp-row{grid-template-columns:auto 1fr auto;grid-auto-rows:auto}.tp-row .tp-due,.tp-row .tp-sel{grid-column:2}.tp-add{grid-template-columns:1fr 1fr}.tp-add .tp-new{grid-column:1/-1}}
+.tbl .mv{background:none;border:0;color:var(--ink-3);cursor:pointer;padding:0 3px;font-size:9px;line-height:1.1}
+.tbl .mv:hover{color:var(--accent)} .ro .mv{display:none}
+.tbl tr.ex-off td{opacity:.55} .tbl tr.ex-off input[data-k=category]{text-decoration:line-through}
+.mix{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line-2);margin:6px 0 8px}
+.mix span{display:block;height:100%}
+.mixleg{display:flex;gap:14px;font-size:12px;color:var(--ink-2);flex-wrap:wrap} .mixleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px} .scen .box{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.scen .box .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)} .scen .box .v{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:2px} .scen .box .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.rng{width:100%;accent-color:var(--accent);margin-top:4px} .ro .rng{pointer-events:auto;opacity:1}
+.plist{list-style:none;margin:0;padding:0} .plist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line-2)} .plist li:last-child{border-bottom:0} .plist input{margin-top:3px;accent-color:var(--accent)} .plist .t{font-weight:500} .plist .m{font-size:12px;color:var(--ink-3)} .plist li.done .t{text-decoration:line-through;color:var(--ink-3)}
+@media (max-width:700px){.scen{grid-template-columns:1fr}}
+
 .tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
 .tbl th{position:sticky;top:0;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:8px 8px;border-bottom:1px solid var(--line);background:var(--surface);white-space:nowrap;font-weight:600}
 .tbl td{padding:4px 6px;border-bottom:1px solid var(--line-2);vertical-align:middle;white-space:nowrap}
@@ -333,8 +358,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 const SUPABASE_URL = 'https://jowuuzppfhqgusxqoqdk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i4QVpMOTPK5UYUvOBs1IEA_divV3SpL';
 const APP_NAME = 'CareerShift';
-const APP_VERSION = '1.7.3';            // bump on every release (semver)
-const APP_BUILD = '20260912.2300-da5b8df';          // stamped by build.py (UTC date-time + content hash)
+const APP_VERSION = '1.9.0';            // bump on every release (semver)
+const APP_BUILD = '20260913.2132-111630c';          // stamped by build.py (UTC date-time + content hash)
 let LATEST = null;                      // latest released version, read from app_meta at sign-in
 function cmpVer(a,b){ const x=String(a).split('.').map(Number), y=String(b).split('.').map(Number); for(let i=0;i<3;i++){ if((x[i]||0)>(y[i]||0)) return 1; if((x[i]||0)<(y[i]||0)) return -1; } return 0; }
 const versionLabel = () => `v${APP_VERSION} · build ${APP_BUILD}`;
@@ -377,7 +402,9 @@ const financeEditable = () => isOwner() || (ROLE==='editor' && CFG.financeVisibi
 const L = {
   priority:['Critical','High','Medium','Low'],
   status:['Not Started','In Progress','Waiting','Blocked','Complete'],
-  category:['Applications','Networking','Recruiters','Interview Prep','Finance','Compliance','Admin','Skills'],
+  category:['Applications','Interview Prep','Networking','Recruiters','Job Search','Skills','Compliance','Benefits & Admin','Finance'],
+  wsType:['Application','Employer contact','Networking','Recruiter contact','Interview','Job fair / event','Training / course','Registration / other'],
+  wsMethod:['Online','Email','Phone','Video','In person'],
   source:['LinkedIn','Indeed','CareerBuilder','Monster','Company Website','Referral','Recruiter','Networking','Other'],
   stage:['Applied','Recruiter Screen','Hiring Manager','Panel Interview','Final Interview','Offer','Rejected'],
   appStatus:['Active','Waiting','On Hold','Closed'],
@@ -391,11 +418,11 @@ const L = {
   netStatus:['To Contact','Contacted','Engaged','Referral Asked','Referral Received','Dormant'],
   roles:['owner','editor','viewer'],
 };
-const LIST_LABELS = {priority:'Task priority',status:'Task status',category:'Task category',source:'Job source',stage:'Application stage',appStatus:'Application status',intStage:'Interview stage',intType:'Interview type',outcome:'Interview outcome',recStatus:'Recruiter status',relationship:'Relationship',referral:'Referral potential',method:'Contact method',netStatus:'Networking status'};
+const LIST_LABELS = {priority:'Task priority',status:'Task status',category:'Task category',source:'Job source',stage:'Application stage',appStatus:'Application status',intStage:'Interview stage',intType:'Interview type',outcome:'Interview outcome',recStatus:'Recruiter status',relationship:'Relationship',referral:'Referral potential',method:'Contact method',netStatus:'Networking status',wsType:'Work-search activity type',wsMethod:'Work-search method'};
 Object.keys(LIST_LABELS).forEach(k=>BASE_L[k]=L[k].slice());
 /* collection -> table */
-const TABLE = {tasks:'tasks',apps:'applications',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance_weeks',expenses:'expenses'};
-const PREFIX = {tasks:'T',apps:'A',interviews:'I',recruiters:'R',contacts:'N',compliance:'C',expenses:'E'};
+const TABLE = {tasks:'tasks',apps:'applications',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance_weeks',activities:'work_search_activities',expenses:'expenses'};
+const PREFIX = {tasks:'T',apps:'A',interviews:'I',recruiters:'R',contacts:'N',compliance:'C',activities:'W',expenses:'E'};
 
 /* ===================== Seed data (3 rows per module, dated relative to today) ===================== */
 function seed(){
@@ -428,13 +455,18 @@ function seed(){
       {ref:'N-003',person:'Lisa Chen',company:'Ohio State Alumni',title:'Data Platform Manager',relationship:'Alumni',referral:'Low',last:addDays(t,-1),next:addDays(t,6),method:'Email',status:'Engaged',notes:'Intro call went well'},
     ],
     compliance:[
-      {ref:'C-001',week:weekEnding(addDays(t,-14)),apps:3,networking:2,recruiters:1,training:1,notes:'Registered with OhioMeansJobs'},
-      {ref:'C-002',week:weekEnding(addDays(t,-7)),apps:1,networking:1,recruiters:0,training:0,notes:'Light week — travel'},
-      {ref:'C-003',week:weekEnding(t),apps:1,networking:2,recruiters:2,training:0,notes:'In progress'},
+      {ref:'C-001',week:weekEnding(addDays(t,-14)),apps:3,networking:2,recruiters:1,training:1,other:0,notes:'Registered with OhioMeansJobs'},
+      {ref:'C-002',week:weekEnding(addDays(t,-7)),apps:1,networking:1,recruiters:0,training:0,other:0,notes:'Light week — travel'},
+      {ref:'C-003',week:weekEnding(t),apps:1,networking:2,recruiters:2,training:0,other:0,notes:'In progress'},
+    ],
+    activities:[
+      {ref:'W-001',date:addDays(t,-2),type:'Job fair / event',employer:'Columbus Tech Job Fair',contact:'Talked to 4 employers',method:'In person',result:'Two follow-ups scheduled',notes:'Brought 10 resumes'},
+      {ref:'W-002',date:addDays(t,-1),type:'Training / course',employer:'OhioMeansJobs workshop',contact:'Resume & LinkedIn clinic',method:'Online',result:'Completed',notes:''},
+      {ref:'W-003',date:t,type:'Employer contact',employer:'Meridian Health',contact:'HR — asked about open analyst roles',method:'Phone',result:'Told to apply online next week',notes:''},
     ],
     expenses:[
-      {type:'Fixed',category:'Mortgage/Rent',budget:2100,actual:2100,sort_order:1},{type:'Fixed',category:'Utilities',budget:280,actual:312,sort_order:2},{type:'Fixed',category:'Insurance',budget:640,actual:640,sort_order:3},{type:'Fixed',category:'Phone',budget:95,actual:95,sort_order:4},{type:'Fixed',category:'Internet',budget:80,actual:80,sort_order:5},
-      {type:'Variable',category:'Food',budget:700,actual:642,sort_order:6},{type:'Variable',category:'Gas',budget:180,actual:205,sort_order:7},{type:'Variable',category:'Entertainment',budget:120,actual:160,sort_order:8},{type:'Variable',category:'Shopping',budget:150,actual:98,sort_order:9},{type:'Variable',category:'Other',budget:200,actual:110,sort_order:10},
+      {type:'Fixed',category:'Mortgage/Rent',budget:2100,actual:2100,sort_order:1,priority:'Essential',status:'Active',due_day:1,notes:'Ask lender about forbearance options'},{type:'Fixed',category:'Utilities',budget:280,actual:312,sort_order:2,priority:'Essential',status:'Active',due_day:15,notes:''},{type:'Fixed',category:'Insurance',budget:640,actual:640,sort_order:3,priority:'Essential',status:'Active',due_day:20,notes:'COBRA vs marketplace decision by day 60'},{type:'Fixed',category:'Phone',budget:95,actual:95,sort_order:4,priority:'Important',status:'Active',due_day:8,notes:'Cheaper plan available'},{type:'Fixed',category:'Internet',budget:80,actual:80,sort_order:5,priority:'Important',status:'Active',due_day:12,notes:''},
+      {type:'Variable',category:'Food',budget:700,actual:642,sort_order:6,priority:'Essential',status:'Active',notes:''},{type:'Variable',category:'Gas',budget:180,actual:205,sort_order:7,priority:'Essential',status:'Active',notes:'Interview travel'},{type:'Variable',category:'Entertainment',budget:120,actual:160,sort_order:8,priority:'Discretionary',status:'Active',notes:''},{type:'Variable',category:'Streaming subscriptions',budget:45,actual:45,sort_order:9,priority:'Discretionary',status:'Active',due_day:3,notes:'Pause until re-employed'},{type:'Variable',category:'Shopping',budget:150,actual:98,sort_order:10,priority:'Discretionary',status:'Active',notes:''},{type:'Variable',category:'Gym',budget:40,actual:40,sort_order:11,priority:'Discretionary',status:'Paused',notes:'Paused Sept — home workouts'},{type:'Variable',category:'Other',budget:200,actual:110,sort_order:12,priority:'Important',status:'Active',notes:''},
     ],
     cash:{ savings:24000, checking:6500, severance:18000, investments:15000, unemployment:2300, other:400 },
     members:[], invites:[], activity:[],
@@ -456,22 +488,22 @@ const DEMO_KEY='careershift.demo.v1';
 /* ---- data adapter: every mutation goes through here ---- */
 const db = {
   async loadAll(){
-    if(MODE==='demo'){ try{ const j=localStorage.getItem(DEMO_KEY); S = j? JSON.parse(j) : demoSeed(); }catch(e){ S=demoSeed(); } applySettings(S.settingsRaw||{}); return; }
+    if(MODE==='demo'){ try{ const j=localStorage.getItem(DEMO_KEY); S = j? JSON.parse(j) : demoSeed(); }catch(e){ S=demoSeed(); } for(const c of Object.keys(TABLE)) S[c]=S[c]||[]; applySettings(S.settingsRaw||{}); return; }
     const q = (t, order) => sb.from(t).select('*').eq('workspace_id', WS.id).order(order||'created_at',{ascending:true});
-    const [tasks,apps,ints,recs,cons,comp,exp,cash,mem,inv,act] = await Promise.all([
-      q('tasks'), q('applications'), q('interviews'), q('recruiters'), q('contacts'), q('compliance_weeks','week'), q('expenses','sort_order'),
+    const [tasks,apps,ints,recs,cons,comp,wsa,exp,cash,mem,inv,act] = await Promise.all([
+      q('tasks'), q('applications'), q('interviews'), q('recruiters'), q('contacts'), q('compliance_weeks','week'), q('work_search_activities','date'), q('expenses','sort_order'),
       sb.from('cash_inputs').select('*').eq('workspace_id',WS.id).maybeSingle(),
       sb.from('workspace_members').select('*').eq('workspace_id',WS.id).order('created_at'),
       isOwner()? sb.from('workspace_invites').select('*').eq('workspace_id',WS.id).is('accepted_at',null).order('created_at') : Promise.resolve({data:[]}),
       sb.from('activity_log').select('*').eq('workspace_id',WS.id).order('created_at',{ascending:false}).limit(60),
     ]);
-    const err=[tasks,apps,ints,recs,cons,comp,exp,cash,mem,act].find(r=>r.error); if(err) throw err.error;
+    const err=[tasks,apps,ints,recs,cons,comp,wsa,exp,cash,mem,act].find(r=>r.error); if(err) throw err.error;
     applySettings(WS.settings);
     let ev = isOwner()? sb.from('user_events').select('*').eq('workspace_id',WS.id).order('created_at',{ascending:false}).limit(300)
                       : sb.from('user_events').select('*').eq('user_id',USER.id).order('created_at',{ascending:false}).limit(100);
     ev = await ev;
     S = { settings:{ separationDate: WS.separation_date, weeklyRequirement: WS.weekly_requirement, name: WS.name },
-      tasks:tasks.data, apps:apps.data, interviews:ints.data, recruiters:recs.data, contacts:cons.data, compliance:comp.data, expenses:exp.data,
+      tasks:tasks.data, apps:apps.data, interviews:ints.data, recruiters:recs.data, contacts:cons.data, compliance:comp.data, activities:wsa.data||[], expenses:exp.data,
       cash: cash.data || {savings:0,checking:0,severance:0,investments:0,unemployment:0,other:0},
       members:mem.data, invites:inv.data||[], activity:act.data, events:ev.data||[], adminUsers:(S&&S.adminUsers)||null, sessions:(S&&S.sessions)||null, mailConfig:(S&&S.mailConfig)||null, changelog:(S&&S.changelog)||'' };
   },
@@ -498,7 +530,7 @@ const db = {
     S.adminUsers=u.users; S.mailConfig={email_configured:u.email_configured, fn_version:u.fn_version||null}; S.sessions=s.data||[]; S.sessionsAt=new Date().toISOString();
   },
   async importJson(obj){
-    const map={tasks:'tasks',applications:'apps',apps:'apps',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance',compliance_weeks:'compliance',expenses:'expenses'};
+    const map={tasks:'tasks',applications:'apps',apps:'apps',interviews:'interviews',recruiters:'recruiters',contacts:'contacts',compliance:'compliance',compliance_weeks:'compliance',activities:'activities',work_search_activities:'activities',expenses:'expenses'};
     const strip=r=>{ const o={...r}; delete o.id; delete o.workspace_id; delete o.created_by; delete o.updated_by; delete o.created_at; delete o.updated_at; return o; };
     const counts={};
     for(const [k,coll] of Object.entries(map)){
@@ -551,7 +583,7 @@ const db = {
     const sd=seed();
     if(MODE==='demo'){ S=demoSeed(); demoSave(); return; }
     logEvent('sample_load');
-    for(const coll of ['tasks','apps','interviews','recruiters','contacts','compliance','expenses']){
+    for(const coll of ['tasks','apps','interviews','recruiters','contacts','compliance','activities','expenses']){
       const rows = sd[coll].map(r=>({...r, workspace_id:WS.id}));
       const {error} = await sb.from(TABLE[coll]).insert(rows); if(error) throw error;
     }
@@ -595,13 +627,37 @@ function followState(next,closed){
 function readiness(i){ return Math.round((i.research+i.star+i.technical+i.leadership+i.questions)/5); }
 function readyCls(s){ return s>=CFG.readyGreen?'good':s>=CFG.readyYellow?'warn':'crit'; }
 function compliance(r){
-  const total = (+r.apps||0)+(+r.networking||0)+(+r.recruiters||0)+(+r.training||0);
+  const total = (+r.apps||0)+(+r.networking||0)+(+r.recruiters||0)+(+r.training||0)+(+r.other||0);
   const req = S.settings.weeklyRequirement;
   if(total>=req) return {cls:'good',label:'Compliant',total};
   if(total>=Math.max(1,req-1)) return {cls:'warn',label:'At Risk',total};
   return {cls:'crit',label:'Not Compliant',total};
 }
-function monthlyExpenses(){ return sum(S.expenses.map(e=>e.actual)); }
+const expActive = () => S.expenses.filter(e=>(e.status||'Active')==='Active');
+const expPri = e => e.priority||'Essential';
+function monthlyExpenses(){ return sum(expActive().map(e=>+e.actual||0)); }
+// Runway gained (in days) if monthly spend drops by `save` dollars at the current cash position
+function runwayGainDays(save){ const cc=cashCalc(); if(cc.burn<=0) return 0; const nb=cc.burn-save; if(nb<=0) return Infinity; return Math.round((cc.cash/nb-cc.cash/cc.burn)*30.44); }
+function nextDueDate(day){ if(!day) return null; const t=parse(T()); let y=t.getFullYear(), m=t.getMonth(); if(day<t.getDate()){ m++; if(m>11){m=0;y++;} } const last=new Date(y,m+1,0).getDate(); return iso(new Date(y,m,Math.min(day,last))); }
+async function moveExpense(id,dir){
+  const list=S.expenses.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const seen=new Set(); let dup=false; list.forEach(x=>{ if(!x.sort_order||seen.has(x.sort_order)) dup=true; seen.add(x.sort_order); });
+  if(dup){ for(let k=0;k<list.length;k++) if(list[k].sort_order!==k+1) await db.update('expenses',list[k].id,{sort_order:k+1}); }
+  const r=list.find(x=>x.id===id); if(!r) return; const same=list.filter(x=>x.type===r.type);
+  const i=same.indexOf(r), j=i+dir; if(j<0||j>=same.length) return;
+  const o=same[j], a=r.sort_order, b=o.sort_order;
+  await db.update('expenses',r.id,{sort_order:b}); await db.update('expenses',o.id,{sort_order:a});
+}
+const MONEY_PLAYBOOK=[
+  ['survival','Know your essentials-only number','Mark every line Essential / Important / Discretionary. The Essential subtotal is the floor you must cover each month — everything else is negotiable.'],
+  ['subs','Pause or cancel what you can live without','Streaming, apps, memberships, premium tiers. Set them to Paused here so the runway reflects it; most can be restarted in minutes when income returns.'],
+  ['negotiate','Call providers before a payment is missed','Lenders, utilities, phone/internet and insurers often have hardship, deferment or lower-tier plans — but only if you ask before you are late. Note the outcome in the Note column.'],
+  ['claim','Keep the unemployment claim clean','File weekly, log every work-search activity in Unemployment Compliance, and record the benefit under Cash Runway → Monthly unemployment income.'],
+  ['health','Decide on health coverage inside the window','After a job ends there is a limited window (commonly 60 days) to choose COBRA or a marketplace plan. Compare total monthly cost and put the number in the budget.'],
+  ['floor','Protect an emergency floor','Do not let cash fall below one month of essentials without a plan, and avoid new high-interest debt to cover routine spending.'],
+  ['inflows','Capture every one-time inflow','Severance, PTO payout, tax refunds, expense reimbursements — enter them in Cash Runway. Remember severance is usually taxed.'],
+  ['weekly','Weekly 15-minute money check-in','Update Actuals, review the bills due in the next 7 days and re-read the runway. Add it as a recurring task in the Master Task Tracker.'],
+];
 function cashCalc(){
   const c=S.cash;
   const cash = (+c.savings)+(+c.checking)+(+c.severance)+(+c.investments);
@@ -635,7 +691,7 @@ function tableHTML(id, rows, cols, opts={}){
     const cells = cols.map(c=>{
       const v = r[c.k];
       if(c.type==='ro') return `<td class="${c.cls||''}">${c.fmt? c.fmt(r):esc(v)}</td>`;
-      if(c.type==='select') return `<td><select data-id="${r.id}" data-k="${c.k}">${c.opts.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
+      if(c.type==='select') return `<td><select data-id="${r.id}" data-k="${c.k}" style="${c.w?`min-width:${c.w}px`:''}">${c.opts.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select></td>`;
       if(c.type==='number') return `<td><input type="number" data-id="${r.id}" data-k="${c.k}" value="${v??''}" ${c.min!=null?`min="${c.min}"`:''} ${c.max!=null?`max="${c.max}"`:''}></td>`;
       if(c.type==='date') return `<td><input type="date" data-id="${r.id}" data-k="${c.k}" value="${v?String(v).slice(0,10):''}"></td>`;
       return `<td><input type="text" data-id="${r.id}" data-k="${c.k}" value="${esc(v)}" style="${c.w?`min-width:${c.w}px`:''}"></td>`;
@@ -645,6 +701,7 @@ function tableHTML(id, rows, cols, opts={}){
   return `<div class="tblhead"><span class="cnt">${rows.length} row${rows.length===1?'':'s'}${filter?' (filtered)':''}</span>${canEdit()?`<button class="btn" data-add="${id}">+ ${addLabel||'Add row'}</button>`:'<span class="cnt">read-only</span>'}</div>
   <div class="tblwrap"><table class="tbl" data-tbl="${id}"><thead><tr>${head}<th></th></tr></thead><tbody>${body||`<tr><td colspan="${cols.length+1}" class="empty">No rows match the current filters.</td></tr>`}</tbody>${foot?`<tfoot>${foot}</tfoot>`:''}</table></div>`;
 }
+const bindTableTo=(container,coll,onNew)=>bindTable(container,coll,onNew);
 function bindTable(container, coll, onNew){
   container.querySelectorAll('[data-tbl]').forEach(tb=>{
     tb.addEventListener('change', e=>{
@@ -658,6 +715,43 @@ function bindTable(container, coll, onNew){
     });
   });
   container.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.insert(coll,onNew()); render(); },'Row added')));
+}
+
+/* ===================== Embedded task panel (shares the tasks table) ===================== */
+const TASK_CATS = { finance:['Finance'], search:['Job Search','Compliance','Benefits & Admin','Skills','Networking','Interview Prep'] };
+function taskPanelHTML(pid, opts){
+  const {cats,title,hint,defaultCat}=opts;
+  if(!moduleOk('tasks')) return `<div class="card"><h3>${esc(title)}</h3><div class="empty">Tasks are outside your access scope — ask the owner to include Tasks &amp; Gantt.</div></div>`;
+  const inCat=r=>cats.includes(r.category);
+  const open=S.tasks.filter(r=>inCat(r)&&r.status!=='Complete').sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+  const done=S.tasks.filter(r=>inCat(r)&&r.status==='Complete').sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
+  const showDone=TP_SHOW_DONE.has(pid);
+  const catOpts=[...new Set([...cats,...L.category.filter(c=>cats.includes(c))])];
+  const row=r=>{ const st=taskState(r); return `<li class="tp-row ${r.status==='Complete'?'done':''}" data-tid="${r.id}">
+      <input type="checkbox" class="tp-done" ${r.status==='Complete'?'checked':''} title="${r.status==='Complete'?'Reopen':'Mark complete'}" ${canEdit()?'':'disabled'}>
+      <div class="tp-main"><input type="text" class="tp-text" data-k="task" value="${esc(r.task)}" ${canEdit()?'':'readonly'}>
+        <div class="tp-meta">${st.label!==r.status?`<span class="pill ${st.cls}">${st.label}</span>`:''}<span class="tp-cat">${esc(r.category)}</span>${r.notes?`<span class="tp-note" title="${esc(r.notes)}">${esc(r.notes)}</span>`:''}</div></div>
+      <input type="date" class="tp-due" data-k="due" value="${r.due?String(r.due).slice(0,10):''}" ${canEdit()?'':'disabled'}>
+      <select class="tp-sel" data-k="priority" ${canEdit()?'':'disabled'}>${L.priority.map(o=>`<option ${o===r.priority?'selected':''}>${o}</option>`).join('')}</select>
+      <select class="tp-sel" data-k="status" ${canEdit()?'':'disabled'}>${L.status.map(o=>`<option ${o===r.status?'selected':''}>${o}</option>`).join('')}</select>
+      ${canEdit()?`<button class="del tp-del" title="Delete task">✕</button>`:'<span></span>'}</li>`; };
+  return `<div class="card tp" data-tp="${pid}"><h3>${esc(title)} <span class="hint">${esc(hint||'')}</span></h3>
+    ${canEdit()?`<form class="tp-add"><input type="text" class="tp-new" placeholder="Add a task… (Enter to save)" maxlength="200" required><select class="tp-newcat">${catOpts.map(c=>`<option ${c===defaultCat?'selected':''}>${esc(c)}</option>`).join('')}</select><input type="date" class="tp-newdue" value="${addDays(T(),7)}" title="Due date"><select class="tp-newpri">${L.priority.map(o=>`<option ${o==='Medium'?'selected':''}>${o}</option>`).join('')}</select><button class="btn primary" type="submit">Add</button></form>`:''}
+    <div class="tp-summary"><span>${open.length} open</span><span>${open.filter(r=>r.due&&r.due<T()).length} overdue</span><span>${open.filter(r=>r.due===T()).length} due today</span><span>${done.length} completed${done.length?` · <a href="#" class="tp-toggle">${showDone?'hide':'show'}</a>`:''}</span></div>
+    <ul class="tp-list">${open.map(row).join('')||`<li class="empty">No open tasks here yet — add one above. They also appear in the Master Task Tracker, Gantt, Daily Action and Weekly Planning.</li>`}${showDone?done.map(row).join(''):''}</ul></div>`;
+}
+const TP_SHOW_DONE=new Set();
+function bindTaskPanel(el){
+  el.querySelectorAll('.tp').forEach(card=>{
+    const pid=card.dataset.tp;
+    const form=card.querySelector('.tp-add'); if(form) form.addEventListener('submit',e=>{ e.preventDefault(); const text=form.querySelector('.tp-new').value.trim(); if(!text) return;
+      guarded(async()=>{ await db.insert('tasks',{ref:nextRef('tasks'),category:form.querySelector('.tp-newcat').value,task:text,subtask:'',start:T(),due:form.querySelector('.tp-newdue').value||null,priority:form.querySelector('.tp-newpri').value,status:'Not Started',owner:'Me',notes:'',progress:0}); render(); },'Task added'); });
+    const tg=card.querySelector('.tp-toggle'); if(tg) tg.addEventListener('click',e=>{ e.preventDefault(); TP_SHOW_DONE.has(pid)?TP_SHOW_DONE.delete(pid):TP_SHOW_DONE.add(pid); render(); });
+    card.querySelector('.tp-list').addEventListener('change',e=>{ const li=e.target.closest('[data-tid]'); if(!li||!canEdit()) return; const id=li.dataset.tid;
+      if(e.target.classList.contains('tp-done')){ const done=e.target.checked; guarded(()=>db.update('tasks',id,done?{status:'Complete',progress:100}:{status:'In Progress'}),done?'Task completed':'Task reopened'); render(); return; }
+      const k=e.target.dataset.k; if(!k) return; guarded(()=>db.update('tasks',id,{[k]:e.target.value||null}),null); render(true); });
+    card.querySelector('.tp-list').addEventListener('click',e=>{ const b=e.target.closest('.tp-del'); if(!b||!canEdit()) return; const id=b.closest('[data-tid]').dataset.tid; guarded(async()=>{ await db.remove('tasks',id); render(); },'Task deleted'); });
+  });
 }
 
 /* ===================== Slicers ===================== */
@@ -958,34 +1052,111 @@ R.network = el => {
 /* ---- 11. Compliance ---- */
 R.compliance = el => {
   const rows=S.compliance.slice().sort((a,b)=>String(a.week).localeCompare(String(b.week)));
-  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'week',label:'Week Ending',type:'date'},{k:'apps',label:'Applications Submitted',type:'number',min:0},{k:'networking',label:'Networking Activities',type:'number',min:0},{k:'recruiters',label:'Recruiter Meetings',type:'number',min:0},{k:'training',label:'Training / Courses',type:'number',min:0},
-    {k:'_t',label:'Total Activities',type:'ro',cls:'num',fmt:r=>compliance(r).total},{k:'_m',label:'Requirement Met',type:'ro',fmt:r=>compliance(r).total>=S.settings.weeklyRequirement?'<span class="pill good">Yes</span>':'<span class="pill crit">No</span>'},{k:'_f',label:'Flag',type:'ro',fmt:r=>{const c=compliance(r);return `<span class="pill ${c.cls}">${c.label}</span>`}},{k:'notes',label:'Notes',type:'text',w:200}];
+  const acts=(S.activities||[]).slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const logged=w=>acts.filter(a=>weekEnding(a.date)===String(w).slice(0,10)).length;
+  const cols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'week',label:'Week Ending',type:'date'},{k:'apps',label:'Applications',type:'number',min:0},{k:'networking',label:'Networking / Employer Contacts',type:'number',min:0},{k:'recruiters',label:'Recruiter Meetings',type:'number',min:0},{k:'training',label:'Training / Courses',type:'number',min:0},{k:'other',label:'Other (interviews, fairs, registrations)',type:'number',min:0},
+    {k:'_t',label:'Total',type:'ro',cls:'num',fmt:r=>compliance(r).total},{k:'_l',label:'Logged',type:'ro',cls:'num',fmt:r=>{const n=logged(r.week);return n?`<span title="${n} activities in the log for this week">${n}</span>`:'<span style="opacity:.4">0</span>'}},{k:'_m',label:'Requirement Met',type:'ro',fmt:r=>compliance(r).total>=S.settings.weeklyRequirement?'<span class="pill good">Yes</span>':'<span class="pill crit">No</span>'},{k:'_f',label:'Flag',type:'ro',fmt:r=>{const c=compliance(r);return `<span class="pill ${c.cls}">${c.label}</span>`}},{k:'notes',label:'Notes',type:'text',w:200}];
   const ok=rows.filter(r=>compliance(r).cls==='good').length;
   const last=rows[rows.length-1];
-  el.innerHTML=`<div class="kpis" style="margin-bottom:16px"><div class="kpi ${ok===rows.length?'good':'warn'}"><div class="l">Weeks compliant</div><div class="v">${ok}/${rows.length}</div></div><div class="kpi info"><div class="l">Weekly requirement</div><div class="v">${isOwner()?`<input type="number" id="req" min="1" value="${S.settings.weeklyRequirement}" style="width:70px;font-family:var(--mono);font-size:22px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:var(--surface-2)">`:S.settings.weeklyRequirement}</div><div class="s">work-search activities / week</div></div><div class="kpi ${last?compliance(last).cls:'info'}"><div class="l">Current week</div><div class="v">${last?compliance(last).total:0}</div><div class="s">activities logged</div></div></div>
-  <div class="card">${tableHTML('compliance',rows,cols,{rowCls:r=>'st-'+compliance(r).cls,addLabel:'Add week'})}<div class="note">Flag rule: total ≥ requirement → Compliant; one short → At Risk; otherwise Not Compliant. Adjust the requirement to match your state's rule (Ohio currently asks for two work-search activities per week; confirm with ODJFS).</div></div>`;
+  const thisWk=weekEnding(T()), thisRow=rows.find(r=>String(r.week).slice(0,10)===thisWk), thisTotal=thisRow?compliance(thisRow).total:0, thisLogged=logged(thisWk);
+  const acols=[{k:'ref',label:'ID',type:'ro',cls:'id'},{k:'date',label:'Date',type:'date'},{k:'type',label:'Activity type',type:'select',w:150,opts:L.wsType},{k:'employer',label:'Employer / organization',type:'text',w:180},{k:'contact',label:'Contact / position / details',type:'text',w:200},{k:'method',label:'Method',type:'select',w:95,opts:L.wsMethod},{k:'result',label:'Result',type:'text',w:160},{k:'_w',label:'Counts in week',type:'ro',fmt:r=>fmtD(weekEnding(r.date))},{k:'notes',label:'Notes',type:'text',w:160}];
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px"><div class="kpi ${ok===rows.length?'good':'warn'}"><div class="l">Weeks compliant</div><div class="v">${ok}/${rows.length}</div></div><div class="kpi info"><div class="l">Weekly requirement</div><div class="v">${isOwner()?`<input type="number" id="req" min="1" value="${S.settings.weeklyRequirement}" style="width:70px;font-family:var(--mono);font-size:22px;border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:var(--surface)">`:S.settings.weeklyRequirement}</div><div class="s">activities per week</div></div>
+    <div class="kpi ${thisTotal>=S.settings.weeklyRequirement?'good':thisTotal>=S.settings.weeklyRequirement-1?'warn':'crit'}"><div class="l">This week (ending ${fmtD(thisWk)})</div><div class="v">${thisTotal}</div><div class="s">${Math.max(0,S.settings.weeklyRequirement-thisTotal)} more needed · ${thisLogged} in the log</div></div>
+    <div class="kpi info"><div class="l">Activities logged</div><div class="v">${acts.length}</div><div class="s">${acts.filter(a=>a.type!=='Application').length} non-application</div></div></div>
+  <div class="card"><h3>Weekly summary <span class="hint">what you certify each week</span></h3>${tableHTML('compliance',rows,cols,{rowCls:r=>'st-'+compliance(r).cls,addLabel:'Add week'})}
+    <div class="note">Flag rule: total ≥ requirement → Compliant; one short → At Risk; otherwise Not Compliant. Adjust the requirement to match your state's rule (Ohio currently asks for two work-search activities per week; confirm with ODJFS). ${canEdit()?`<button class="btn" id="syncLog" style="margin-left:8px">Fill counts from the activity log</button>`:''}</div></div>
+  <div class="card" style="margin-top:16px"><h3>Work-search activity log <span class="hint">every activity, application or not — the record most agencies ask you to keep</span></h3>
+    ${tableHTML('activities',acts,acols,{addLabel:'Log activity'})}
+    <div class="note">Log job fairs, employer contacts, workshops, registrations, interviews and recruiter calls here. "Fill counts from the activity log" (above) tallies them into the weekly summary: Application → Applications; Networking and Employer contact → Networking; Recruiter contact → Recruiter meetings; Training / course → Training; Interview, Job fair / event and Registration / other → Other.</div></div>
+  <div style="margin-top:16px">${taskPanelHTML('search',{cats:TASK_CATS.search,defaultCat:'Job Search',title:'Job-search & claim tasks',hint:'non-application to-dos: resume, LinkedIn, certifications, claim paperwork, benefits'})}</div>`;
   const req=el.querySelector('#req'); if(req) req.addEventListener('change',e=>guarded(async()=>{ await db.updateSettings({weeklyRequirement:Math.max(1,+e.target.value||1)}); render(); }));
-  bindTable(el,'compliance',()=>({ref:nextRef('compliance'),week:weekEnding(addDays(last?last.week:T(),7)),apps:0,networking:0,recruiters:0,training:0,notes:''}));
+  bindTableTo(el.querySelector('[data-tbl=compliance]').closest('.card'),'compliance',()=>({ref:nextRef('compliance'),week:weekEnding(addDays(last?last.week:T(),7)),apps:0,networking:0,recruiters:0,training:0,other:0,notes:''}));
+  bindTableTo(el.querySelector('[data-tbl=activities]').closest('.card'),'activities',()=>({ref:nextRef('activities'),date:T(),type:'Employer contact',employer:'',contact:'',method:'Online',result:'',notes:''}));
+  const sync=el.querySelector('#syncLog'); if(sync) sync.addEventListener('click',()=>{ if(!confirm('Replace the counts of every week that has activity-log entries with the tallies from the log? Weeks without log entries are left alone.')) return; guarded(async()=>{
+    const byWeek={}; acts.forEach(a=>{ const w=weekEnding(a.date); byWeek[w]=byWeek[w]||{apps:0,networking:0,recruiters:0,training:0,other:0};
+      const c=byWeek[w]; if(a.type==='Application') c.apps++; else if(a.type==='Networking'||a.type==='Employer contact') c.networking++; else if(a.type==='Recruiter contact') c.recruiters++; else if(a.type==='Training / course') c.training++; else c.other++; });
+    let n=0; for(const [w,c] of Object.entries(byWeek)){ const r=S.compliance.find(x=>String(x.week).slice(0,10)===w);
+      if(r){ await db.update('compliance',r.id,c); } else { await db.insert('compliance',{ref:nextRef('compliance'),week:w,...c,notes:'From activity log'}); } n++; }
+    render(); },'Weekly counts updated from the log'); });
+  bindTaskPanel(el);
 };
 
 /* ---- 12. Budget (owner) ---- */
 R.budget = el => {
-  const _ce=canEdit; if(!financeEditable()) el.classList.add('ro'); else el.classList.remove('ro');
-  const fixed=S.expenses.filter(e=>e.type==='Fixed'), variable=S.expenses.filter(e=>e.type==='Variable');
-  const tb=sum(S.expenses.map(e=>e.budget)), ta=sum(S.expenses.map(e=>e.actual));
-  const cols=[{k:'category',label:'Category',type:'text',w:140},{k:'budget',label:'Budget',type:'number',min:0},{k:'actual',label:'Actual',type:'number',min:0},{k:'_v',label:'Variance',type:'ro',cls:'num',fmt:r=>{const v=r.budget-r.actual;return `<span style="color:var(--${v<0?'crit':'good'})">${fmtMoney(v)}</span>`}},{k:'_p',label:'% of budget',type:'ro',cls:'num',fmt:r=>r.budget?Math.round(r.actual/r.budget*100)+'%':'—'}];
-  const foot=rs=>`<tr><td>Subtotal</td><td class="num">${fmtMoney(sum(rs.map(r=>r.budget)))}</td><td class="num">${fmtMoney(sum(rs.map(r=>r.actual)))}</td><td class="num">${fmtMoney(sum(rs.map(r=>r.budget-r.actual)))}</td><td class="num">${Math.round(sum(rs.map(r=>r.actual))/Math.max(1,sum(rs.map(r=>r.budget)))*100)}%</td><td></td></tr>`;
-  const cls=r=>r.actual>r.budget*(1+CFG.budgetCritPct/100)?'st-crit':r.actual>r.budget?'st-warn':'st-good';
+  if(!financeEditable()) el.classList.add('ro'); else el.classList.remove('ro');
+  const ordered=S.expenses.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const fixed=ordered.filter(e=>e.type==='Fixed'), variable=ordered.filter(e=>e.type!=='Fixed');
+  const act=expActive(), cc=cashCalc();
+  const tb=sum(act.map(e=>+e.budget||0)), ta=sum(act.map(e=>+e.actual||0));
+  const ess=sum(act.filter(e=>expPri(e)==='Essential').map(e=>+e.actual||0)), imp=sum(act.filter(e=>expPri(e)==='Important').map(e=>+e.actual||0)), disc=sum(act.filter(e=>expPri(e)==='Discretionary').map(e=>+e.actual||0));
+  const paused=sum(S.expenses.filter(e=>(e.status||'Active')!=='Active').map(e=>+e.actual||0));
+  const cover=ess? Math.round(cc.income/ess*100) : (cc.income?999:0);
+  const essRunway = (ess-cc.income)>0 ? cc.cash/(ess-cc.income) : Infinity;
+  const mvBtns=r=>`<button class="mv" data-move="${r.id}" data-dir="-1" title="Move up">▲</button><button class="mv" data-move="${r.id}" data-dir="1" title="Move down">▼</button>`;
+  const cols=[{k:'_mv',label:'',type:'ro',fmt:mvBtns},{k:'category',label:'Category',type:'text',w:150},{k:'priority',label:'Priority',type:'select',w:125,opts:['Essential','Important','Discretionary']},
+    {k:'budget',label:'Budget',type:'number',min:0},{k:'actual',label:'Actual',type:'number',min:0},
+    {k:'_v',label:'Variance',type:'ro',cls:'num',fmt:r=>{const v=(+r.budget||0)-(+r.actual||0);return `<span style="color:var(--${v<0?'crit':'good'})">${fmtMoney(v)}</span>`}},
+    {k:'_p',label:'% of budget',type:'ro',cls:'num',fmt:r=>r.budget?Math.round(r.actual/r.budget*100)+'%':'—'},
+    {k:'due_day',label:'Due day',type:'number',min:1,max:31},{k:'notes',label:'Note',type:'text',w:200},{k:'status',label:'Status',type:'select',w:100,opts:['Active','Paused','Cancelled']},{k:'type',label:'Type',type:'select',w:95,opts:['Fixed','Variable']}];
+  const foot=rs=>{ const a=rs.filter(e=>(e.status||'Active')==='Active'); return `<tr><td></td><td>Subtotal (active)</td><td></td><td class="num">${fmtMoney(sum(a.map(r=>+r.budget||0)))}</td><td class="num">${fmtMoney(sum(a.map(r=>+r.actual||0)))}</td><td class="num">${fmtMoney(sum(a.map(r=>(+r.budget||0)-(+r.actual||0))))}</td><td class="num">${Math.round(sum(a.map(r=>+r.actual||0))/Math.max(1,sum(a.map(r=>+r.budget||0)))*100)}%</td><td colspan="5"></td></tr>`; };
+  const cls=r=>(r.status||'Active')!=='Active'?'st-idle ex-off':r.actual>r.budget*(1+CFG.budgetCritPct/100)?'st-crit':r.actual>r.budget?'st-warn':'st-good';
   const card=(l,v,c,s)=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||''}</div></div>`;
-  el.innerHTML=`<div class="kpis" style="margin-bottom:16px">${card('Monthly budget',fmtMoney(tb),'info')}${card('Actual spend',fmtMoney(ta),ta>tb?'crit':'good',ta>tb?'over plan':'within plan')}${card('Variance',fmtMoney(tb-ta),tb-ta<0?'crit':'good')}${card('Fixed share',Math.round(sum(fixed.map(e=>e.actual))/Math.max(1,ta)*100)+'%','info','of actual spend')}</div>
-  <div class="grid g12"><div class="card span6"><h3>Fixed expenses</h3>${tableHTML('fixed',fixed,cols,{rowCls:cls,foot:foot(fixed),addLabel:'Add fixed'})}</div><div class="card span6"><h3>Variable expenses</h3>${tableHTML('variable',variable,cols,{rowCls:cls,foot:foot(variable),addLabel:'Add variable'})}</div>
-  <div class="card span12"><h3>Budget vs actual by category</h3><div id="bc" class="chart"></div><div class="note">Actual spend total (${fmtMoney(ta)}) feeds the Cash Runway Calculator's monthly expenses automatically. ${CFG.financeVisibility==='members'?'Visible to all members (Settings → Finance visibility).':'Only the workspace owner can see this module.'}</div></div></div>`;
-  bindTable(el,'expenses',()=>null); // change/delete handlers
+  const pct=n=>ta?Math.round(n/ta*100):0;
+  // savings finder
+  const ideas=[];
+  act.filter(e=>(+e.actual||0)>(+e.budget||0)).forEach(e=>ideas.push({s:(+e.actual)-(+e.budget),t:`Bring ${e.category} back to budget`,m:`${fmtMoney(e.actual)} actual vs ${fmtMoney(e.budget)} planned`,c:'warn'}));
+  act.filter(e=>expPri(e)==='Discretionary'&&(+e.actual||0)>0).forEach(e=>ideas.push({s:+e.actual,t:`Pause ${e.category}`,m:`Discretionary · set Status to Paused when you stop it`,c:'soon'}));
+  act.filter(e=>expPri(e)==='Important'&&(+e.actual||0)>=40).forEach(e=>ideas.push({s:Math.round((+e.actual)*0.25),t:`Downgrade or negotiate ${e.category}`,m:`Important · a 25% cheaper plan would save ${fmtMoney((+e.actual)*0.25)}/mo`,c:'info'}));
+  ideas.sort((a,b)=>b.s-a.s);
+  const subs=act.filter(e=>expPri(e)!=='Essential'&&(+e.actual||0)>0&&(+e.actual||0)<=60);
+  const gain=d=>d===Infinity?'covers the burn':d>0?`+${d} days runway`:'';
+  // upcoming bills
+  const bills=act.filter(e=>e.due_day).map(e=>({...e,when:nextDueDate(+e.due_day),amt:+(e.budget||e.actual)||0})).sort((a,b)=>a.when.localeCompare(b.when));
+  const in7=sum(bills.filter(b=>b.when<=addDays(T(),7)).map(b=>b.amt)), in30=sum(bills.filter(b=>b.when<=addDays(T(),30)).map(b=>b.amt));
+  const liquid=(+S.cash.checking||0)+(+S.cash.savings||0);
+  const done=new Set(CFG.moneyPlaybook||[]);
+  el.innerHTML=`<div class="kpis" style="margin-bottom:16px">${card('Monthly budget',fmtMoney(tb),'info','active items')}${card('Actual spend',fmtMoney(ta),ta>tb?'crit':'good',ta>tb?'over plan':'within plan')}${card('Variance',fmtMoney(tb-ta),tb-ta<0?'crit':'good')}
+    ${card('Essentials',fmtMoney(ess),'info',`${pct(ess)}% of spend · your floor`)}${card('Discretionary',fmtMoney(disc),disc>ta*0.15?'warn':'good',`${pct(disc)}% of spend${disc>ta*0.15?' · above 15%':''}`)}${card('Income covers',cover>=999?'∞':cover+'%',cover>=100?'good':cover>=60?'warn':'crit','of essentials')}</div>
+  <div class="grid g12">
+    <div class="card span12"><h3>Fixed expenses <span class="hint">▲▼ reorder · Paused/Cancelled rows are excluded from spend and runway</span></h3>${tableHTML('fixed',fixed,cols,{rowCls:cls,foot:foot(fixed),addLabel:'Add fixed'})}</div>
+    <div class="card span12"><h3>Variable expenses</h3>${tableHTML('variable',variable,cols,{rowCls:cls,foot:foot(variable),addLabel:'Add variable'})}</div>
+    <div class="card span12"><h3>Budget vs actual by category <span class="hint">active items, largest budget first</span></h3><div id="bc" class="chart"></div><div class="note">Actual spend total (${fmtMoney(ta)}${paused?`, excluding ${fmtMoney(paused)} paused/cancelled`:''}) feeds the Cash Runway Calculator's monthly expenses automatically. ${CFG.financeVisibility==='members'?'Visible to all members (Settings → Finance visibility).':'Only the workspace owner can see this module.'}</div></div>
+    <div class="card span6"><h3>Lean budget &amp; what-if <span class="hint">runway impact of cutting back</span></h3>
+      <div class="mix"><span style="width:${pct(ess)}%;background:var(--accent)" title="Essential ${pct(ess)}%"></span><span style="width:${pct(imp)}%;background:var(--warn)" title="Important ${pct(imp)}%"></span><span style="width:${pct(disc)}%;background:var(--soon)" title="Discretionary ${pct(disc)}%"></span></div>
+      <div class="mixleg"><span><i style="background:var(--accent)"></i>Essential ${fmtMoney(ess)} (${pct(ess)}%)</span><span><i style="background:var(--warn)"></i>Important ${fmtMoney(imp)} (${pct(imp)}%)</span><span><i style="background:var(--soon)"></i>Discretionary ${fmtMoney(disc)} (${pct(disc)}%)</span></div>
+      <div class="note" style="margin-top:8px">Essentials-only living costs ${fmtMoney(ess)}/month — on that floor your cash lasts <b>${isFinite(essRunway)?essRunway.toFixed(1)+' months':'indefinitely (income covers it)'}</b> versus ${isFinite(cc.months)?cc.months.toFixed(1)+' months':'indefinitely'} today. In job-search mode a common target is discretionary ≤ 15% of spend and income covering 100% of essentials.</div>
+      <div style="margin-top:12px"><label for="wiDisc" style="font-size:12px;color:var(--ink-2)">Cut discretionary spend by <b id="wiDiscV">100</b>%</label><input id="wiDisc" class="rng" type="range" min="0" max="100" step="5" value="100"></div>
+      <div style="margin-top:6px"><label for="wiImp" style="font-size:12px;color:var(--ink-2)">Trim important items by <b id="wiImpV">0</b>%</label><input id="wiImp" class="rng" type="range" min="0" max="100" step="5" value="0"></div>
+      <div class="scen"><div class="box"><div class="l">Today</div><div class="v">${fmtMoney(cc.burn)}<span style="font-size:12px;font-weight:400">/mo burn</span></div><div class="s">${isFinite(cc.months)?cc.months.toFixed(1)+' months · exhausts '+fmtDY(cc.exhaust):'Income covers expenses'}</div></div><div class="box" id="wiOut"></div></div></div>
+    <div class="card span6"><h3>Savings finder <span class="hint">biggest levers first</span></h3>
+      ${ideas.length?`<ul class="alist">${ideas.slice(0,8).map(i=>`<li><span class="dot ${i.c}"></span><span><span class="t">${esc(i.t)}</span><div class="m">${esc(i.m)}</div></span><span class="d">${fmtMoney(i.s)}/mo<br><span style="color:var(--good)">${gain(runwayGainDays(i.s))}</span></span></li>`).join('')}</ul>`:'<div class="empty">Nothing to cut — every line is within budget and there is no discretionary spend.</div>'}
+      ${subs.length?`<div class="note" style="margin-top:8px">Small recurring items: ${subs.length} non-essential line${subs.length===1?'':'s'} under $60 add up to <b>${fmtMoney(sum(subs.map(e=>+e.actual)))}/month</b> (${gain(runwayGainDays(sum(subs.map(e=>+e.actual))))||'—'}). These are the easiest wins.</div>`:''}</div>
+    <div class="card span6"><h3>Upcoming bills <span class="hint">next 30 days, from the Due day column</span></h3>
+      ${bills.filter(b=>b.when<=addDays(T(),30)).length?`<ul class="alist">${bills.filter(b=>b.when<=addDays(T(),30)).map(b=>`<li><span class="dot ${b.when<=addDays(T(),7)?'soon':'idle'}"></span><span><span class="t">${esc(b.category)}</span><div class="m">${expPri(b)}${b.notes?' · '+esc(b.notes):''}</div></span><span class="d">${fmtD(b.when)}<br>${fmtMoney(b.amt)}</span></li>`).join('')}</ul>
+      <div class="note" style="margin-top:8px">Due in 7 days: <b>${fmtMoney(in7)}</b> · in 30 days: <b>${fmtMoney(in30)}</b> · checking + savings: <b style="color:var(--${liquid>=in30?'good':'crit'})">${fmtMoney(liquid)}</b>${liquid<in30?' — short for the month; move funds or renegotiate due dates':''}</div>`:'<div class="empty">Enter a day of the month in the Due day column to see what is coming and whether cash on hand covers it.</div>'}</div>
+    <div class="card span6"><h3>Job-search money playbook <span class="hint">${done.size}/${MONEY_PLAYBOOK.length} done</span></h3>
+      <ul class="plist">${MONEY_PLAYBOOK.map(([id,t,m])=>`<li class="${done.has(id)?'done':''}"><input type="checkbox" data-pb="${id}" ${done.has(id)?'checked':''} ${financeEditable()?'':'disabled'}><span><div class="t">${esc(t)}</div><div class="m">${esc(m)}</div></span></li>`).join('')}</ul>
+      <div class="note" style="margin-top:6px">General good practice, not financial advice — check the rules that apply to you (benefits, COBRA windows, lender programs).</div></div>
+    <div class="span12">${taskPanelHTML('finance',{cats:TASK_CATS.finance,defaultCat:'Finance',title:'Money tasks',hint:'call the lender, cancel a subscription, file for benefits — tracked with everything else'})}</div>
+  </div>`;
+  bindTable(el,'expenses',()=>null);
   el.querySelectorAll('[data-add]').forEach(b=>{ b.replaceWith(b.cloneNode(true)); });
-  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.insert('expenses',{type:b.dataset.add==='fixed'?'Fixed':'Variable',category:'New',budget:0,actual:0,sort_order:S.expenses.length+1}); render(); },'Row added')));
-  Plotly.newPlot(el.querySelector('#bc'),[{type:'bar',name:'Budget',x:S.expenses.map(e=>e.category),y:S.expenses.map(e=>e.budget),marker:{color:cssVar('--line')},hovertemplate:'%{x} budget $%{y:,}<extra></extra>'},
-    {type:'bar',name:'Actual',x:S.expenses.map(e=>e.category),y:S.expenses.map(e=>e.actual),marker:{color:S.expenses.map(e=>e.actual>e.budget?cssVar('--crit'):cssVar('--accent'))},hovertemplate:'%{x} actual $%{y:,}<extra></extra>'}],
-    {...plotBase(),barmode:'group',showlegend:true,legend:{orientation:'h',y:1.15},height:260,yaxis:{...plotBase().yaxis,tickprefix:'$'}},PCFG);
+  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>guarded(async()=>{ await db.insert('expenses',{type:b.dataset.add==='fixed'?'Fixed':'Variable',category:'New',budget:0,actual:0,priority:'Essential',status:'Active',notes:'',sort_order:Math.max(0,...S.expenses.map(e=>+e.sort_order||0))+1}); render(); },'Row added')));
+  el.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{ if(!financeEditable()) return; guarded(async()=>{ await moveExpense(b.dataset.move,+b.dataset.dir); render(); }); }));
+  el.querySelectorAll('[data-pb]').forEach(c=>c.addEventListener('change',()=>{ const d=new Set(CFG.moneyPlaybook||[]); c.checked?d.add(c.dataset.pb):d.delete(c.dataset.pb); guarded(async()=>{ await db.saveSettings({moneyPlaybook:[...d]}); render(); }); }));
+  // what-if
+  const wi=()=>{ const dp=+el.querySelector('#wiDisc').value, ip=+el.querySelector('#wiImp').value; el.querySelector('#wiDiscV').textContent=dp; el.querySelector('#wiImpV').textContent=ip;
+    const save=disc*dp/100+imp*ip/100, nb=cc.burn-save, months=nb>0?cc.cash/nb:Infinity, ex=nb>0?addDays(T(),Math.round(months*30.44)):null, gained=isFinite(months)&&isFinite(cc.months)?months-cc.months:null;
+    el.querySelector('#wiOut').innerHTML=`<div class="l">Scenario · saves ${fmtMoney(save)}/mo</div><div class="v" style="color:var(--${nb<=0?'good':months>=CFG.runwayGreen?'good':months>=CFG.runwayYellow?'warn':'crit'})">${nb<=0?'Income covers it':months.toFixed(1)+' mo'}</div><div class="s">${nb<=0?'No cash drawdown at this spend level':`${fmtMoney(nb)}/mo burn · exhausts ${fmtDY(ex)}${gained!=null?` · <b style="color:var(--good)">+${gained.toFixed(1)} months</b>`:''}`}</div>`; };
+  el.querySelectorAll('#wiDisc,#wiImp').forEach(i=>i.addEventListener('input',wi)); wi();
+  bindTaskPanel(el);
+  // chart: horizontal bars, largest budget on top, readable labels
+  const rows=act.slice().sort((a,b)=>Math.max(+a.budget||0,+a.actual||0)-Math.max(+b.budget||0,+b.actual||0));
+  const lab=rows.map(e=>{ const c=String(e.category||'—'); return c.length>26?c.slice(0,24)+'…':c; });
+  const h=Math.max(220, rows.length*28+70);
+  Plotly.newPlot(el.querySelector('#bc'),[{type:'bar',orientation:'h',name:'Budget',y:lab,x:rows.map(e=>+e.budget||0),customdata:rows.map(e=>e.category),marker:{color:cssVar('--line')},hovertemplate:'%{customdata} · budget $%{x:,}<extra></extra>'},
+    {type:'bar',orientation:'h',name:'Actual',y:lab,x:rows.map(e=>+e.actual||0),customdata:rows.map(e=>e.category),marker:{color:rows.map(e=>e.actual>e.budget?cssVar('--crit'):cssVar('--accent'))},hovertemplate:'%{customdata} · actual $%{x:,}<extra></extra>'}],
+    {...plotBase(),barmode:'group',bargap:.25,showlegend:true,legend:{orientation:'h',y:1,x:1,xanchor:'right',yanchor:'bottom'},height:h,margin:{l:8,r:24,t:28,b:36},xaxis:{...plotBase().xaxis,tickprefix:'$',tickformat:',d'},yaxis:{...plotBase().yaxis,automargin:true,tickfont:{size:12},type:'category',dtick:1}},PCFG);
 };
 
 /* ---- 13. Runway (owner) ---- */
@@ -993,7 +1164,7 @@ R.runway = el => {
   const c=S.cash, cc=cashCalc();
   const f=[['savings','Savings'],['checking','Checking account balance'],['severance','Severance'],['investments','Investments available'],['unemployment','Monthly unemployment income'],['other','Other monthly income']];
   el.innerHTML=`<div class="grid g12"><div class="card span4"><h3>Inputs</h3><div class="form">${f.map(([k,l])=>`<label for="cash-${k}">${l}</label><input id="cash-${k}" type="number" data-k="${k}" value="${c[k]}">`).join('')}
-    <label>Monthly expenses (from Budget)</label><div class="out" style="opacity:.8">${fmtMoney(monthlyExpenses())}</div>
+    <label>Monthly expenses (active Budget items)</label><div class="out" style="opacity:.8">${fmtMoney(monthlyExpenses())}</div>
     <div class="sep"></div><label>Available cash</label><div class="out">${fmtMoney(cc.cash)}</div><label>Monthly income</label><div class="out">${fmtMoney(cc.income)}</div><label>Monthly burn rate</label><div class="out" style="color:var(--${cc.burn>0?'crit':'good'})">${fmtMoney(cc.burn)}</div><label>Runway (months)</label><div class="out">${isFinite(cc.months)?cc.months.toFixed(1):'∞'}</div><label>Estimated exhaustion date</label><div class="out">${cc.exhaust?fmtDY(cc.exhaust):'n/a'}</div></div></div>
     <div class="card span4"><h3>Runway gauge <span class="hint">months</span></h3><div id="rg" class="chart" style="min-height:200px"></div><div style="text-align:center"><span class="pill ${cc.cls}">${cc.cls==='good'?`Green · ${CFG.runwayGreen}+ months`:cc.cls==='warn'?`Yellow · ${CFG.runwayYellow}–${CFG.runwayGreen} months`:`Red · under ${CFG.runwayYellow} months`}</span></div></div>
     <div class="card span4"><h3>Warning indicators</h3><ul class="alist">
@@ -1246,6 +1417,9 @@ function healthChecks(){
     chk('Momentum','Response rate',S.apps.length?(responded/S.apps.length>=0.3?'good':'warn'):'info',S.apps.length?`${Math.round(responded/S.apps.length*100)}% of applications moved past "Applied" (benchmark ≥ 30%).`:'No applications yet.'),
     chk('Momentum','Interview conversion',S.apps.length?(S.interviews.length/S.apps.length>=0.2?'good':'warn'):'info',S.apps.length?`${S.interviews.length} interview(s) from ${S.apps.length} application(s) — ${Math.round(S.interviews.length/S.apps.length*100)}% (benchmark ≥ 20%).`:'No applications yet.'),
     chk('Momentum','Follow-up discipline',overdueF?'warn':'good',`${overdueF} overdue follow-up(s) of ${followups.length} scheduled.`),
+    chk('Money','Income covers essentials',(()=>{const a=expActive();const e=sum(a.filter(x=>expPri(x)==='Essential').map(x=>+x.actual||0));const inc=cashCalc().income;return !a.length?'info':inc>=e?'good':inc>=e*0.6?'warn':'crit';})(),(()=>{const a=expActive();const e=sum(a.filter(x=>expPri(x)==='Essential').map(x=>+x.actual||0));const inc=cashCalc().income;return a.length?`Monthly income ${fmtMoney(inc)} vs essentials ${fmtMoney(e)} (${e?Math.round(inc/e*100):0}%).`:'No expenses entered.';})(),'Budget → mark rows Essential / Important / Discretionary; Cash Runway → income'),
+    chk('Money','Discretionary share',(()=>{const a=expActive();const t=sum(a.map(x=>+x.actual||0));const d=sum(a.filter(x=>expPri(x)==='Discretionary').map(x=>+x.actual||0));return !t?'info':d<=t*0.15?'good':d<=t*0.3?'warn':'crit';})(),(()=>{const a=expActive();const t=sum(a.map(x=>+x.actual||0));const d=sum(a.filter(x=>expPri(x)==='Discretionary').map(x=>+x.actual||0));return t?`${fmtMoney(d)} of ${fmtMoney(t)} (${Math.round(d/t*100)}%) is discretionary — target ≤ 15% while job searching.`:'No spend recorded.';})(),'Budget → Savings finder'),
+    chk('Money','Bills covered for 30 days',(()=>{const a=expActive().filter(x=>x.due_day);if(!a.length)return 'info';const due=sum(a.filter(x=>nextDueDate(+x.due_day)<=addDays(t,30)).map(x=>+(x.budget||x.actual)||0));const liq=(+S.cash.checking||0)+(+S.cash.savings||0);return liq>=due?'good':'crit';})(),(()=>{const a=expActive().filter(x=>x.due_day);if(!a.length)return 'Add due days on the Budget tab to track upcoming bills.';const due=sum(a.filter(x=>nextDueDate(+x.due_day)<=addDays(t,30)).map(x=>+(x.budget||x.actual)||0));const liq=(+S.cash.checking||0)+(+S.cash.savings||0);return `${fmtMoney(due)} due in the next 30 days vs ${fmtMoney(liq)} in checking + savings.`;})(),'Budget → Upcoming bills'),
     chk('Momentum','Interview readiness',S.interviews.some(i=>i.outcome==='Pending'&&i.date>=t&&readiness(i)<CFG.readyYellow)?'crit':'good',`${S.interviews.filter(i=>i.outcome==='Pending'&&i.date>=t&&readiness(i)<CFG.readyYellow).length} upcoming interview(s) below ${CFG.readyYellow}% readiness.`),
     chk('Momentum','Active days (last 7)',activeDays>=5?'good':activeDays>=3?'warn':'crit',`${activeDays} day(s) with recorded activity in the last week (target 5+).`),
   ];
@@ -1378,9 +1552,9 @@ R.admin = el => {
   on('btnAbout2',aboutModal);
   on('saveProfile',()=>guarded(async()=>{ const f=el.querySelector('#meFirst').value.trim(), l=el.querySelector('#meLast').value.trim(), p=el.querySelector('#mePhone').value.trim(); const {error}=await sb.rpc('update_my_profile',{p_first:f,p_last:l,p_phone:p}); if(error) throw error; ME.first_name=f||null; ME.last_name=l||null; ME.phone=p||null; ME.display_name=[f,l].filter(Boolean).join(' ')||ME.display_name; logEvent('profile_updated'); render(); },'Profile saved'));
   // ----- export / import -----
-  on('exportJson',()=>{ if(!canExport()) return toast('Not authorized'); const out={workspace:S.settings,settings:CFG,tasks:S.tasks,applications:S.apps,interviews:S.interviews,recruiters:S.recruiters,contacts:S.contacts,compliance:S.compliance,expenses:financeVisible()?S.expenses:undefined,cash:financeVisible()?S.cash:undefined,exported_at:new Date().toISOString()};
+  on('exportJson',()=>{ if(!canExport()) return toast('Not authorized'); const out={workspace:S.settings,settings:CFG,tasks:S.tasks,applications:S.apps,interviews:S.interviews,recruiters:S.recruiters,contacts:S.contacts,compliance:S.compliance,activities:S.activities,expenses:financeVisible()?S.expenses:undefined,cash:financeVisible()?S.cash:undefined,exported_at:new Date().toISOString()};
     const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(out,null,2)); a.download=`careershift-${T()}.json`; document.body.appendChild(a); a.click(); a.remove(); logEvent('export_json',{rows:S.tasks.length+S.apps.length}); toast('Workspace exported'); setTimeout(()=>refresh(),800); });
-  on('exportCsvAll',()=>{ for(const c of ['tasks','apps','interviews','recruiters','contacts','compliance']) csvDownload(`careershift-${c}-${T()}.csv`, S[c]); setTimeout(()=>refresh(),800); });
+  on('exportCsvAll',()=>{ for(const c of ['tasks','apps','interviews','recruiters','contacts','compliance','activities']) csvDownload(`careershift-${c}-${T()}.csv`, S[c]); setTimeout(()=>refresh(),800); });
   const exportLog=()=>{ const audit=(S.activity||[]).map(a=>({when:a.created_at,who:a.user_email,type:'data/access',event:a.action,table:a.table_name,record:a.record_id,detail:a.summary})); const usage=(S.events||[]).map(e=>({when:e.created_at,who:e.user_email,type:'session',event:e.event,table:'',record:'',detail:JSON.stringify(e.detail)})); csvDownload(`careershift-activity-${T()}.csv`,[...audit,...usage].sort((a,b)=>b.when.localeCompare(a.when))); };
   on('exportLog',exportLog); on('exportLog2',exportLog);
   const imp=el.querySelector('#impFile'); if(imp) imp.addEventListener('change',()=>{ const f=imp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>guarded(async()=>{ const obj=JSON.parse(rd.result); const counts=await db.importJson(obj); await refresh(); const box=document.querySelector('#impResult'); if(box) box.innerHTML=`<div class="msg ok">Imported: ${Object.entries(counts).map(([k,v])=>`${v} ${k}`).join(', ')||'nothing recognised'}.</div>`; },'Import complete'); rd.readAsText(f); });
@@ -1469,7 +1643,7 @@ let rtChannel=null, rtTimer=null;
 function subscribeRealtime(){
   if(rtChannel){ sb.removeChannel(rtChannel); rtChannel=null; }
   rtChannel = sb.channel('ws-'+WS.id);
-  ['tasks','applications','interviews','recruiters','contacts','compliance_weeks','expenses','cash_inputs','workspace_members','activity_log'].forEach(t=>{
+  ['tasks','applications','interviews','recruiters','contacts','compliance_weeks','work_search_activities','expenses','cash_inputs','workspace_members','activity_log'].forEach(t=>{
     rtChannel.on('postgres_changes',{event:'*',schema:'public',table:t,filter:`workspace_id=eq.${WS.id}`},()=>{ clearTimeout(rtTimer); rtTimer=setTimeout(()=>refresh(true),350); });
   });
   rtChannel.subscribe(status=>{ const s=document.getElementById('syncState'); if(s) s.className='sync'+(status==='SUBSCRIBED'?'':' off'); });
